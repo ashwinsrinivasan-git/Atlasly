@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import CountrySilhouette from './Map/CountrySilhouette';
-import { Navigation, AlertCircle } from 'lucide-react';
+import { Navigation } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BonusRounds from './BonusRounds';
 
@@ -24,20 +24,37 @@ const Game = ({ game, topo, triviaIndex }) => {
 
     return (
         <div className="game-container">
-            <div className="game-header">
+            <motion.div
+                className="game-header"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+            >
                 <div className="info-badge">
                     Attempt {guesses.length} / 6
                 </div>
-                {isComplete && (
-                    <div className={`status-badge ${hasWon ? 'success' : 'danger'}`}>
-                        {hasWon ? 'Solved!' : 'Game Over'}
-                    </div>
-                )}
-            </div>
+                <AnimatePresence>
+                    {isComplete && (
+                        <motion.div
+                            className={`status-badge ${hasWon ? 'success' : 'danger'}`}
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            exit={{ scale: 0, rotate: 180 }}
+                            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                        >
+                            {hasWon ? '🎉 Solved!' : '😅 Game Over'}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
 
-            <div className="map-wrapper">
+            <motion.div
+                className="map-wrapper"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+            >
                 <CountrySilhouette topo={topo} targetName={targetCountry} />
-            </div>
+            </motion.div>
 
             <div className="guesses-list">
                 <AnimatePresence initial={false}>
@@ -45,153 +62,278 @@ const Game = ({ game, topo, triviaIndex }) => {
                         <motion.div
                             key={i}
                             className="guess-item"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
+                            initial={{ opacity: 0, x: -50, scale: 0.8 }}
+                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                            exit={{ opacity: 0, x: 50, scale: 0.8 }}
+                            transition={{
+                                type: 'spring',
+                                stiffness: 300,
+                                damping: 25
+                            }}
                             layout
                         >
                             <span className="guess-name">{g.country}</span>
                             <div className="guess-metrics">
                                 <span className="metric">{g.distance} km</span>
-                                <Navigation
-                                    size={18}
-                                    style={{ transform: `rotate(${g.direction}deg)` }}
-                                />
-                                <span className="metric">{g.proximity}%</span>
+                                <motion.div
+                                    animate={{ rotate: g.direction }}
+                                    transition={{ type: 'spring', stiffness: 100 }}
+                                >
+                                    <Navigation size={18} />
+                                </motion.div>
+                                <span className="metric proximity">{g.proximity}%</span>
                             </div>
                         </motion.div>
                     ))}
                 </AnimatePresence>
             </div>
 
-            {!isComplete && (
-                <form className="input-area" onSubmit={handleSubmit}>
-                    <input
-                        type="text"
-                        className="game-input"
-                        placeholder="Type a country name..."
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        list="countries-list"
-                        autoFocus
-                    />
-                    <datalist id="countries-list">
-                        {playable.slice(0, 50).map(c => (
-                            <option key={c.name} value={c.name} />
-                        ))}
-                    </datalist>
-                    <button type="submit" className="btn btn-primary">Guess</button>
-                </form>
-            )}
+            <AnimatePresence>
+                {!isComplete && (
+                    <motion.form
+                        className="input-area"
+                        onSubmit={handleSubmit}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 20 }}
+                    >
+                        <input
+                            type="text"
+                            className="game-input"
+                            placeholder="Type a country name..."
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            list="countries-list"
+                            autoFocus
+                        />
+                        <datalist id="countries-list">
+                            {playable.slice(0, 50).map(c => (
+                                <option key={c.name} value={c.name} />
+                            ))}
+                        </datalist>
+                        <motion.button
+                            type="submit"
+                            className="btn btn-primary"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                        >
+                            Guess
+                        </motion.button>
+                    </motion.form>
+                )}
+            </AnimatePresence>
 
-            {isComplete && (
-                <motion.div
-                    className="result-modal"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                >
-                    <div className="result-content">
-                        <h2>{hasWon ? '🎉 Outstanding!' : '🗺️ Good Try!'}</h2>
-                        <p>The country was <strong>{targetCountry}</strong>.</p>
+            <AnimatePresence>
+                {isComplete && (
+                    <motion.div
+                        className="result-modal"
+                        initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, y: 50 }}
+                        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                    >
+                        <div className="result-content">
+                            <motion.h2
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                            >
+                                {hasWon ? '🎉 Outstanding!' : '🗺️ Good Try!'}
+                            </motion.h2>
+                            <p>The country was <strong>{targetCountry}</strong>.</p>
 
-                        {hasWon && <BonusRounds game={game} triviaIndex={triviaIndex} />}
+                            {hasWon && <BonusRounds game={game} triviaIndex={triviaIndex} />}
 
-                        <div className="action-row">
-                            <button className="btn btn-primary" onClick={game.startUnlimited}>Play Another</button>
-                            <button className="btn btn-ghost" onClick={() => game.setScreen('landing')}>Back Home</button>
+                            <div className="action-row">
+                                <motion.button
+                                    className="btn btn-primary"
+                                    onClick={game.startUnlimited}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Play Another
+                                </motion.button>
+                                <motion.button
+                                    className="btn btn-ghost"
+                                    onClick={() => game.setScreen('landing')}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    Back Home
+                                </motion.button>
+                            </div>
                         </div>
-                    </div>
-                </motion.div>
-            )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <style>{`
                 .game-container {
-                    max-width: 600px;
+                    max-width: min(600px, 100%);
                     margin: 0 auto;
                     display: flex;
                     flex-direction: column;
-                    gap: 1.5rem;
+                    gap: var(--space-md);
+                    padding: 0 var(--space-sm);
                 }
+
                 .game-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
+                    flex-wrap: wrap;
+                    gap: var(--space-sm);
                 }
+
                 .info-badge {
                     font-weight: 600;
+                    font-size: var(--font-sm);
                     color: var(--text-secondary);
+                    padding: 0.5rem 1rem;
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid var(--glass-border);
+                    border-radius: var(--radius-full);
                 }
+
                 .status-badge {
-                    padding: 0.25rem 0.75rem;
-                    border-radius: 1rem;
+                    padding: 0.5rem 1rem;
+                    border-radius: var(--radius-full);
                     font-weight: 700;
-                    font-size: 0.9rem;
+                    font-size: var(--font-sm);
                 }
-                .status-badge.success { background: #dcfce7; color: #15803d; }
-                .status-badge.danger { background: #fee2e2; color: #b91c1c; }
+
+                .status-badge.success {
+                    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+                    color: #15803d;
+                    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+                }
+
+                .status-badge.danger {
+                    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+                    color: #b91c1c;
+                    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+                }
                 
                 .map-wrapper {
-                    background: var(--bg-secondary);
-                    border-radius: var(--radius-lg);
-                    padding: 1rem;
-                    height: 300px;
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    border-radius: var(--radius-xl);
+                    padding: var(--space-md);
+                    height: clamp(250px, 40vh, 400px);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border: 1px solid var(--border);
+                    border: 1px solid var(--glass-border);
+                    box-shadow: var(--shadow);
                 }
 
                 .guesses-list {
                     display: flex;
                     flex-direction: column;
-                    gap: 0.5rem;
+                    gap: var(--space-sm);
                     min-height: 100px;
                 }
+
                 .guess-item {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    padding: 0.75rem;
-                    background: var(--bg-primary);
-                    border: 1px solid var(--border);
+                    padding: var(--space-sm) var(--space-md);
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    border: 1px solid var(--glass-border);
                     border-radius: var(--radius-md);
-                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                    box-shadow: var(--shadow);
                 }
-                .guess-name { font-weight: 600; }
-                .guess-metrics { display: flex; align-items: center; gap: 1rem; color: var(--text-secondary); font-size: 0.9rem; }
+
+                .guess-name {
+                    font-weight: 600;
+                    font-size: var(--font-base);
+                    color: var(--text-primary);
+                }
+
+                .guess-metrics {
+                    display: flex;
+                    align-items: center;
+                    gap: var(--space-sm);
+                    color: var(--text-secondary);
+                    font-size: var(--font-sm);
+                }
+
+                .metric.proximity {
+                    font-weight: 700;
+                    color: var(--accent);
+                }
                 
                 .input-area {
                     display: flex;
-                    gap: 0.5rem;
+                    gap: var(--space-sm);
+                    flex-wrap: wrap;
                 }
+
                 .game-input {
                     flex: 1;
-                    padding: 0.8rem 1rem;
+                    min-width: 200px;
+                    padding: 0.875rem 1.25rem;
                     border-radius: var(--radius-md);
-                    border: 1px solid var(--border);
-                    background: var(--bg-primary);
+                    border: 2px solid var(--border);
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
                     color: var(--text-primary);
-                    font-size: 1rem;
+                    font-size: var(--font-base);
                     outline: none;
+                    transition: all var(--transition-speed) var(--transition-smooth);
                 }
+
                 .game-input:focus {
                     border-color: var(--accent);
-                    box-shadow: 0 0 0 2px var(--accent-hover);
+                    box-shadow: 0 0 0 3px var(--accent-light);
+                    transform: translateY(-1px);
                 }
 
                 .result-modal {
-                    background: var(--bg-primary);
-                    border: 1px solid var(--border);
-                    padding: 2rem;
-                    border-radius: var(--radius-lg);
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    border: 1px solid var(--glass-border);
+                    padding: var(--space-xl);
+                    border-radius: var(--radius-xl);
                     text-align: center;
-                    box-shadow: var(--shadow);
+                    box-shadow: var(--shadow-lg);
                 }
-                .result-content h2 { font-size: 2rem; margin-bottom: 0.5rem; }
+
+                .result-content h2 {
+                    font-size: var(--font-xl);
+                    margin-bottom: var(--space-sm);
+                }
+
+                .result-content p {
+                    font-size: var(--font-lg);
+                    margin-bottom: var(--space-md);
+                }
+
                 .action-row {
                     display: flex;
                     justify-content: center;
-                    gap: 1rem;
-                    margin-top: 1.5rem;
+                    gap: var(--space-sm);
+                    margin-top: var(--space-lg);
+                    flex-wrap: wrap;
+                }
+
+                @media (max-width: 640px) {
+                    .input-area {
+                        flex-direction: column;
+                    }
+                    .game-input {
+                        width: 100%;
+                    }
+                    .btn {
+                        width: 100%;
+                    }
                 }
             `}</style>
         </div>

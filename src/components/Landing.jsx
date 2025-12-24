@@ -1,140 +1,239 @@
 import React from 'react';
-import { Play, Zap, Trophy, Map as MapIcon, Calendar } from 'lucide-react';
+import { Play, Zap, Trophy, Calendar } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Landing = ({ game, stats }) => {
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1,
+                delayChildren: 0.2
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                type: 'spring',
+                stiffness: 100,
+                damping: 12
+            }
+        }
+    };
+
     return (
-        <div className="landing-container">
+        <motion.div
+            className="landing-container"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+        >
             {/* Hero */}
-            <header className="hero">
-                <div className="badge">
+            <motion.header className="hero" variants={itemVariants}>
+                <motion.div
+                    className="badge"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                >
                     <Zap size={14} /> <span>Daily Challenge</span>
-                </div>
+                </motion.div>
                 <h1>Master World Geography</h1>
                 <p>Guess countries from their silhouettes. Get instant feedback with distance and direction clues.</p>
 
                 <div className="cta-group">
-                    <button
+                    <motion.button
                         className="btn btn-primary"
                         onClick={game.startDaily}
                         disabled={game.dailyCompleted}
                         style={game.dailyCompleted ? { opacity: 0.7, cursor: 'not-allowed' } : {}}
+                        whileHover={!game.dailyCompleted ? { scale: 1.02 } : {}}
+                        whileTap={!game.dailyCompleted ? { scale: 0.98 } : {}}
                     >
                         <Calendar size={18} />
                         {game.dailyCompleted ? 'Daily Completed' : 'Play Daily'}
-                    </button>
-                    <button className="btn btn-ghost" onClick={game.startUnlimited}>
+                    </motion.button>
+                    <motion.button
+                        className="btn btn-ghost"
+                        onClick={game.startUnlimited}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                    >
                         <Play size={18} /> Practice Mode
-                    </button>
+                    </motion.button>
                 </div>
-            </header>
+            </motion.header>
 
             {/* Stats */}
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <div className="stat-icon">🔥</div>
-                    <div className="stat-value">{stats.streak}</div>
-                    <div className="stat-label">Current Streak</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon">🏆</div>
-                    <div className="stat-value">{stats.bestStreak}</div>
-                    <div className="stat-label">Best Streak</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-icon">🌍</div>
-                    <div className="stat-value">{stats.wins}</div>
-                    <div className="stat-label">Total Wins</div>
-                </div>
-            </div>
+            <motion.div className="stats-grid" variants={itemVariants}>
+                {[
+                    { icon: '🔥', value: stats.streak, label: 'Current Streak' },
+                    { icon: '🏆', value: stats.bestStreak, label: 'Best Streak' },
+                    { icon: '🌍', value: stats.wins, label: 'Total Wins' }
+                ].map((stat, index) => (
+                    <motion.div
+                        key={stat.label}
+                        className="stat-card"
+                        variants={itemVariants}
+                        whileHover={{
+                            scale: 1.05,
+                            rotate: [0, -1, 1, 0],
+                            transition: { duration: 0.3 }
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        <div className="stat-icon">{stat.icon}</div>
+                        <motion.div
+                            className="stat-value"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{
+                                type: 'spring',
+                                stiffness: 200,
+                                damping: 10,
+                                delay: 0.5 + index * 0.1
+                            }}
+                        >
+                            {stat.value}
+                        </motion.div>
+                        <div className="stat-label">{stat.label}</div>
+                    </motion.div>
+                ))}
+            </motion.div>
 
             <style>{`
                 .landing-container {
                     display: flex;
                     flex-direction: column;
-                    gap: 3rem;
-                    padding: 2rem 0;
-                    animation: fadeIn 0.5s ease-out;
+                    gap: var(--space-xl);
+                    padding: var(--space-lg) 0;
                 }
+
                 .hero {
                     text-align: center;
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: 1.5rem;
+                    gap: var(--space-md);
                 }
+
                 .badge {
                     display: inline-flex;
                     align-items: center;
                     gap: 0.5rem;
-                    background: var(--bg-secondary);
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
                     color: var(--accent);
-                    padding: 0.4rem 0.8rem;
-                    border-radius: 2rem;
-                    font-size: 0.9rem;
+                    padding: 0.5rem 1rem;
+                    border-radius: var(--radius-full);
+                    font-size: var(--font-sm);
                     font-weight: 600;
-                    border: 1px solid var(--border);
+                    border: 1px solid var(--glass-border);
+                    box-shadow: var(--shadow);
                 }
+
                 h1 {
-                    font-size: 3rem;
+                    font-size: var(--font-2xl);
                     font-weight: 800;
                     letter-spacing: -0.03em;
                     line-height: 1.1;
+                    background: var(--gradient-primary);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
                 }
+
                 .hero p {
-                    font-size: 1.25rem;
+                    font-size: var(--font-lg);
                     max-width: 600px;
+                    color: var(--text-secondary);
                 }
+
                 .cta-group {
                     display: flex;
-                    gap: 1rem;
-                    margin-top: 1rem;
+                    flex-wrap: wrap;
+                    gap: var(--space-sm);
+                    margin-top: var(--space-md);
+                    justify-content: center;
                 }
+
                 .stats-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 1.5rem;
+                    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+                    gap: var(--space-md);
                 }
+
                 .stat-card {
-                    background: var(--bg-primary);
-                    border: 1px solid var(--border);
-                    border-radius: var(--radius-lg);
-                    padding: 1.5rem;
+                    background: var(--glass-bg);
+                    backdrop-filter: blur(10px);
+                    -webkit-backdrop-filter: blur(10px);
+                    border: 1px solid var(--glass-border);
+                    border-radius: var(--radius-xl);
+                    padding: var(--space-lg);
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    gap: 0.5rem;
-                    transition: transform 0.2s;
+                    gap: var(--space-sm);
+                    box-shadow: var(--shadow);
+                    cursor: pointer;
+                    position: relative;
+                    overflow: hidden;
                 }
-                .stat-card:hover {
-                    transform: translateY(-4px);
+
+                .stat-card::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 3px;
+                    background: var(--gradient-accent);
+                    transform: scaleX(0);
+                    transition: transform 0.3s var(--transition-smooth);
                 }
+
+                .stat-card:hover::before {
+                    transform: scaleX(1);
+                }
+
                 .stat-icon {
-                    font-size: 2rem;
-                    margin-bottom: 0.5rem;
+                    font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+                    margin-bottom: var(--space-xs);
+                    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
                 }
+
                 .stat-value {
-                    font-size: 2rem;
+                    font-size: var(--font-2xl);
                     font-weight: 800;
                     color: var(--text-primary);
+                    line-height: 1;
                 }
+
                 .stat-label {
                     color: var(--text-secondary);
-                    font-size: 0.9rem;
-                    font-weight: 500;
+                    font-size: var(--font-sm);
+                    font-weight: 600;
                     text-transform: uppercase;
                     letter-spacing: 0.05em;
                 }
-                @media (max-width: 600px) {
-                    h1 { font-size: 2rem; }
-                    .cta-group { flex-direction: column; width: 100%; }
-                    .btn { width: 100%; }
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
+
+                @media (max-width: 640px) {
+                    .cta-group {
+                        flex-direction: column;
+                        width: 100%;
+                    }
+                    .btn {
+                        width: 100%;
+                    }
                 }
             `}</style>
-        </div>
+        </motion.div>
     );
 };
 
