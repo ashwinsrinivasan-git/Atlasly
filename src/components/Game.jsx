@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import CountrySilhouette from './Map/CountrySilhouette';
+import Country3D from './Map/Country3D';
 import { Navigation, Check, X, Compass } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BonusRounds from './BonusRounds';
@@ -112,7 +112,7 @@ const Game = ({ game, topo, triviaIndex }) => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.1 }}
             >
-                <CountrySilhouette topo={topo} targetName={targetCountry} />
+                <Country3D topo={topo} targetName={targetCountry} />
             </motion.div>
 
             <div className="guesses-list">
