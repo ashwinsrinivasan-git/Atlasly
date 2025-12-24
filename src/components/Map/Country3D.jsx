@@ -85,10 +85,10 @@ const CountryMesh = ({ feature, texture }) => {
                     {/* Face Material: Texture with some emission to prevent being too dark */}
                     <meshStandardMaterial
                         map={texture}
-                        roughness={0.7}
-                        metalness={0.2}
-                        emissive="#222"
-                        emissiveIntensity={0.2}
+                        roughness={0.5}
+                        metalness={0.1}
+                        emissive="#444444"
+                        emissiveIntensity={0.5}
                         side={THREE.DoubleSide}
                     />
                 </mesh>
@@ -117,10 +117,11 @@ const Country3D = ({ topo, targetName }) => {
             <Canvas shadows dpr={[1, 2]}>
                 <PerspectiveCamera makeDefault position={[0, 0, 200]} fov={45} />
 
-                {/* Lighting Setup */}
-                <ambientLight intensity={1.2} /> {/* Much brighter ambient */}
-                <directionalLight position={[50, 50, 100]} intensity={1.5} castShadow />
-                <pointLight position={[-50, -50, -50]} intensity={0.8} color="#aaccee" /> {/* Backlight (rim) */}
+                {/* Lighting Setup - High Key to prevent darkness */}
+                <ambientLight intensity={2.5} />
+                <hemisphereLight skyColor="#ffffff" groundColor="#444444" intensity={2.0} />
+                <directionalLight position={[50, 100, 100]} intensity={3.0} castShadow />
+                <pointLight position={[-50, -50, 50]} intensity={2.0} color="#ffffff" />
 
                 <Environment preset="city" /> {/* Generic reflections for realism */}
 
