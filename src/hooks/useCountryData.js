@@ -2,19 +2,8 @@ import { useState, useEffect } from 'react';
 import * as topojson from 'topojson-client';
 import * as d3 from 'd3';
 import { normalizeName } from '../utils/geography';
-
-const CACHE = {
-    rcKey: "atlasly_restcountries_v1",
-    rcTsKey: "atlasly_restcountries_ts_v1",
-    topoKey: "atlasly_topo50m_v1",
-    topoTsKey: "atlasly_topo50m_ts_v1"
-};
-
-async function fetchJson(url) {
-    const r = await fetch(url, { cache: "force-cache" });
-    if (!r.ok) throw new Error("HTTP " + r.status + " " + url);
-    return await r.json();
-}
+import countriesData from '../data/countries-data.json';
+import worldTopology from '../data/world-topology.json';
 
 // Logic extracted from legacy app.js
 function buildCountryIndexFromTopo(topo) {
@@ -113,38 +102,11 @@ export function useCountryData() {
     useEffect(() => {
         const load = async () => {
             try {
-                // Load Topo
-                let topo = null;
-                const now = Date.now();
-                const cachedTopo = localStorage.getItem(CACHE.topoKey);
-                const cachedTopoTs = Number(localStorage.getItem(CACHE.topoTsKey) || 0);
+                // Use imported static data instead of fetching from APIs
+                const topo = worldTopology;
+                const rc = countriesData;
 
-                if (cachedTopo && (now - cachedTopoTs) < 7 * 24 * 3600 * 1000) {
-                    topo = JSON.parse(cachedTopo);
-                } else {
-                    topo = await fetchJson("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json");
-                    try {
-                        localStorage.setItem(CACHE.topoKey, JSON.stringify(topo));
-                        localStorage.setItem(CACHE.topoTsKey, String(now));
-                    } catch (e) { console.warn("Storage full", e); }
-                }
-
-                // Load REST Countries
-                let rc = null;
-                const cachedRc = localStorage.getItem(CACHE.rcKey);
-                const cachedRcTs = Number(localStorage.getItem(CACHE.rcTsKey) || 0);
-
-                if (cachedRc && (now - cachedRcTs) < 7 * 24 * 3600 * 1000) {
-                    rc = JSON.parse(cachedRc);
-                } else {
-                    rc = await fetchJson("https://restcountries.com/v3.1/all?fields=name,cca3,capital,flags,borders,population,region,altSpellings,translations,flag");
-                    try {
-                        localStorage.setItem(CACHE.rcKey, JSON.stringify(rc));
-                        localStorage.setItem(CACHE.rcTsKey, String(now));
-                    } catch (e) { console.warn("Storage full", e); }
-                }
-
-                // Process
+                // Process data (same logic as before)
                 const countryIndex = buildCountryIndexFromTopo(topo);
                 const triviaIndex = buildTriviaIndex(rc);
 
