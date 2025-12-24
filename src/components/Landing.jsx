@@ -165,7 +165,7 @@ const Landing = ({ game, stats }) => {
 
                 .stats-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+                    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
                     gap: var(--space-md);
                 }
 

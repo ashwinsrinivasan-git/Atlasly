@@ -10,6 +10,15 @@ export function useGameLogic(playable, triviaIndex) {
     const [bonusRound, setBonusRound] = useState(null);
     const [bonusAnswers, setBonusAnswers] = useState({});
 
+    const [easyMode, setEasyMode] = useState(() => {
+        try { return JSON.parse(localStorage.getItem("atlaslyEasyMode")) || false; } catch { return false; }
+    });
+    const [currentOptions, setCurrentOptions] = useState([]);
+
+    useEffect(() => {
+        localStorage.setItem("atlaslyEasyMode", JSON.stringify(easyMode));
+    }, [easyMode]);
+
     // Stats
     const [stats, setStats] = useState(() => {
         try {
@@ -39,6 +48,35 @@ export function useGameLogic(playable, triviaIndex) {
         return playable[0].name;
     };
 
+    const generateOptions = (target) => {
+        if (!playable || !target) return [];
+        const available = playable.filter(c => c.name !== target);
+        const distractors = [];
+        const pool = [...available];
+
+        // Try to find distractors in the same region if possible for "moderate" difficulty, 
+        // or just random for now. Let's do random but maybe weight by area size similarly?
+        // Simple random is fine for now.
+        while (distractors.length < 3 && pool.length > 0) {
+            const idx = Math.floor(Math.random() * pool.length);
+            distractors.push(pool[idx]);
+            pool.splice(idx, 1);
+        }
+
+        const targetObj = playable.find(c => c.name === target);
+        if (!targetObj) return [];
+
+        return [...distractors, targetObj]
+            .map(c => c.name) // just names
+            .sort(() => Math.random() - 0.5);
+    };
+
+    useEffect(() => {
+        if ((!currentOptions || currentOptions.length === 0) && targetCountry && playable.length > 0) {
+            setCurrentOptions(generateOptions(targetCountry));
+        }
+    }, [targetCountry, playable, currentOptions]);
+
     const startDaily = () => {
         const c = pickDailyCountry();
         if (!c) return;
@@ -60,6 +98,7 @@ export function useGameLogic(playable, triviaIndex) {
         setBonusRound(null);
         setBonusAnswers({});
         setScreen('game');
+        setCurrentOptions(generateOptions(target));
     };
 
     const resolveGuess = (input) => {
@@ -144,6 +183,8 @@ export function useGameLogic(playable, triviaIndex) {
         startDaily,
         startUnlimited,
         submitGuess,
-        playable // expose for autocomplete
+        playable, // expose for autocomplete
+        easyMode, setEasyMode,
+        currentOptions
     };
 }

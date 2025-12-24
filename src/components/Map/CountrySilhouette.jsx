@@ -87,7 +87,8 @@ const CountrySilhouette = ({ topo, targetName, theme = 'light' }) => {
             width="100%"
             height="100%"
             viewBox="0 0 520 420"
-            style={{ maxWidth: '600px', maxHeight: '500px', margin: '0 auto', display: 'block' }}
+            preserveAspectRatio="xMidYMid meet"
+            style={{ maxWidth: '100%', maxHeight: '100%', margin: '0 auto', display: 'block' }}
             aria-label="Country silhouette"
         />
     );

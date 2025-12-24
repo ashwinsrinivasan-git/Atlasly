@@ -184,11 +184,11 @@ const BonusRounds = ({ game, triviaIndex }) => {
 
                 .options-grid {
                     display: grid;
-                    grid-template-columns: repeat(2, 1fr);
+                    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
                     gap: 1rem;
                 }
                 .options-grid.flags {
-                    grid-template-columns: repeat(4, 1fr);
+                    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
                 }
                 .option-btn {
                     padding: 1rem;

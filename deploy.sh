@@ -6,6 +6,9 @@ set -e
 # build
 npm run build
 
+# Get the remote URL from the parent repository before changing directory
+REMOTE_URL=$(git config --get remote.origin.url)
+
 # navigate into the build output directory
 cd dist
 
@@ -15,10 +18,7 @@ echo > .nojekyll
 git init
 git checkout -B main
 git add -A
-git commit -m 'deploy'
-
-# Get the remote URL from the parent repository (which has the token configured)
-REMOTE_URL=$(git config --get remote.origin.url)
+git commit -m 'deploy' || true
 
 # Deploy using the parent's remote URL
 # We use https here so it works with the credential helper or token-in-url
