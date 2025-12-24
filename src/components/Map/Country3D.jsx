@@ -10,7 +10,8 @@ import earthTextureSrc from '../../assets/earth_texture.png';
 // Utility: Convert GeoJSON feature to Three.js Shapes
 function featureToShapes(feature) {
     const shapes = [];
-    const projection = d3.geoMercator().fitSize([100, 100], feature);
+    // Increase resolution for better shape details
+    const projection = d3.geoMercator().fitSize([150, 150], feature);
     const path = d3.geoPath().projection(projection);
 
     // We need to access the coordinates directly. 
@@ -65,24 +66,31 @@ const CountryMesh = ({ feature, texture }) => {
     const shapes = useMemo(() => featureToShapes(feature), [feature]);
 
     const extrudeSettings = useMemo(() => ({
-        depth: 2,
+        depth: 4, // Thicker for more substance
         bevelEnabled: true,
-        bevelThickness: 0.2,
-        bevelSize: 0.2,
-        bevelSegments: 3
+        bevelThickness: 0.5,
+        bevelSize: 0.5,
+        bevelSegments: 4
     }), []);
 
-    // Fix texture UVs roughly
+    // Fix texture UVs -> Scale texture larger so it doesn't tile 100 times
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    // texture.repeat.set(0.05, 0.05); // Scale texture to fit roughly
+    texture.repeat.set(0.015, 0.015); // This maps ~66 units to 1 texture repeat. Object is 150 units. So ~2.5 repeats.
 
     return (
-        <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+        <Float speed={2.5} rotationIntensity={0.6} floatIntensity={0.6}>
             <Center>
                 <mesh ref={meshRef} castShadow receiveShadow>
                     <extrudeGeometry args={[shapes, extrudeSettings]} />
-                    {/* Face Material: Texture */}
-                    <meshStandardMaterial map={texture} roughness={0.8} metalness={0.1} side={THREE.DoubleSide} />
+                    {/* Face Material: Texture with some emission to prevent being too dark */}
+                    <meshStandardMaterial
+                        map={texture}
+                        roughness={0.7}
+                        metalness={0.2}
+                        emissive="#222"
+                        emissiveIntensity={0.2}
+                        side={THREE.DoubleSide}
+                    />
                 </mesh>
             </Center>
         </Float>
@@ -107,14 +115,18 @@ const Country3D = ({ topo, targetName }) => {
     return (
         <div style={{ width: '100%', height: '100%' }}>
             <Canvas shadows dpr={[1, 2]}>
-                <PerspectiveCamera makeDefault position={[0, 0, 150]} fov={50} />
-                <ambientLight intensity={0.5} />
-                <spotLight position={[50, 50, 50]} angle={0.15} penumbra={1} intensity={2} castShadow />
-                <pointLight position={[-10, -10, -10]} intensity={1} />
+                <PerspectiveCamera makeDefault position={[0, 0, 200]} fov={45} />
+
+                {/* Lighting Setup */}
+                <ambientLight intensity={1.2} /> {/* Much brighter ambient */}
+                <directionalLight position={[50, 50, 100]} intensity={1.5} castShadow />
+                <pointLight position={[-50, -50, -50]} intensity={0.8} color="#aaccee" /> {/* Backlight (rim) */}
+
+                <Environment preset="city" /> {/* Generic reflections for realism */}
 
                 <CountryMesh feature={feature} texture={texture} />
 
-                <OrbitControls enableZoom={true} minDistance={50} maxDistance={300} autoRotate={false} />
+                <OrbitControls enableZoom={true} minDistance={100} maxDistance={400} autoRotate={false} />
             </Canvas>
         </div>
     );
