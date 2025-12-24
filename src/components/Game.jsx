@@ -349,12 +349,16 @@ const Game = ({ game, topo, triviaIndex }) => {
                     -webkit-backdrop-filter: blur(10px);
                     border-radius: var(--radius-xl);
                     padding: var(--space-md);
-                    height: clamp(250px, 40vh, 400px);
+                    /* Dynamic height constraint to keep it within view */
+                    height: clamp(200px, 35vh, 400px);
+                    max-height: 40vh;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     border: 1px solid var(--glass-border);
                     box-shadow: var(--shadow);
+                    overflow: hidden; 
+                    position: relative;
                 }
 
                 .guesses-list {

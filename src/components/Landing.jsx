@@ -110,8 +110,10 @@ const Landing = ({ game, stats }) => {
                 .landing-container {
                     display: flex;
                     flex-direction: column;
-                    gap: var(--space-xl);
-                    padding: var(--space-lg) 0;
+                    gap: clamp(1rem, 5vh, var(--space-xl));
+                    padding: clamp(1rem, 3vh, var(--space-lg)) 0;
+                    height: 100%;
+                    justify-content: center;
                 }
 
                 .hero {

@@ -99,8 +99,8 @@ const Layout = ({ children, screen, onHome }) => {
                 }
 
                 .brand-icon {
-                    width: clamp(36px, 10vw, 44px);
-                    height: clamp(36px, 10vw, 44px);
+                    width: clamp(32px, 8vw, 44px);
+                    height: clamp(32px, 8vw, 44px);
                     background: var(--gradient-accent);
                     border-radius: var(--radius-md);
                     display: flex;
