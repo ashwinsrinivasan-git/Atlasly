@@ -106,7 +106,7 @@ export const AuthProvider = ({ children }) => {
             setUserProfile(fallbackProfile);
             setIsAdmin(fallbackProfile.role === 'admin');
 
-            // Try again in 3 seconds
+            // Try again quickly (1s for faster recovery)
             setTimeout(async () => {
                 console.log('[AuthContext] Retrying profile fetch...');
                 try {
@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }) => {
                 } catch (retryError) {
                     console.error('[AuthContext] Retry failed:', retryError);
                 }
-            }, 3000);
+            }, 1000); // Reduced from 3s to 1s
         }
     };
 
@@ -181,11 +181,11 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         console.log('[AuthContext] Initializing auth listener...');
 
-        // Safety timeout - if loading takes too long, force render anyway
+        // Safety timeout - reduced for faster page load
         const timeoutId = setTimeout(() => {
             console.warn('[AuthContext] Auth initialization timeout - forcing render');
             setLoading(false);
-        }, 5000); // 5 second timeout
+        }, 2000); // 2 second timeout (reduced from 5s)
 
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             console.log('[AuthContext] Auth state changed:', user ? `User: ${user.email}` : 'No user');

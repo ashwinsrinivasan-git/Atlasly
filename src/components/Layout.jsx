@@ -20,7 +20,7 @@ const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin
             typed += e.key.toLowerCase();
             if (typed.endsWith("ashwin")) {
                 onUnlockAshwin();
-                alert("🚀 Ashwin Mode Unlocked!");
+                alert("🌍 Visited Countries Unlocked!");
                 typed = "";
             }
             if (typed.length > 20) typed = typed.slice(-10);
@@ -60,7 +60,7 @@ const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin
                             if (clickCount.current >= 3) {
                                 onUnlockAshwin();
                                 clickCount.current = 0;
-                                alert("🚀 Ashwin Mode Unlocked!");
+                                alert("🌍 Visited Countries Unlocked!");
                             }
                             onHome();
                         }}

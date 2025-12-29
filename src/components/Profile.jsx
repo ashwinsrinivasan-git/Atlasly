@@ -44,7 +44,7 @@ const Profile = ({ profile, onBack, onToggleVisited, topo, onUpdateName, onUnloc
                             </div>
                         ) : (
                             <div className="display-group" onClick={() => setIsEditing(true)}>
-                                <h1>{profile.name} {profile.ashwinMode && <span className="ashwin-tag">Ashwin Mode</span>}</h1>
+                                <h1>{profile.name} {profile.ashwinMode && <span className="ashwin-tag">Traveler</span>}</h1>
                                 <Edit2 size={14} className="edit-icon" />
                             </div>
                         )}
@@ -130,7 +130,7 @@ const Profile = ({ profile, onBack, onToggleVisited, topo, onUpdateName, onUnloc
                 </div>
             </motion.div>
 
-            {/* Ashwin Mode - Premium feature for visited countries */}
+            {/* Visited Countries - Track real-life travel */}
             <AnimatePresence mode="wait">
                 {profile.ashwinMode ? (
                     <motion.div
@@ -143,7 +143,7 @@ const Profile = ({ profile, onBack, onToggleVisited, topo, onUpdateName, onUnloc
                     >
                         <div className="launch-content">
                             <MapPin size={64} className="globe-icon visited" />
-                            <h2>Ashwin Mode Unlocked! 🚀</h2>
+                            <h2>Visited Countries Unlocked! 🌍</h2>
                             <p>Track your real-life travel journey on an immersive 3D world map showing all the countries you've actually visited.</p>
                             <motion.button
                                 className="btn btn-primary btn-launch visited-btn"
@@ -152,7 +152,7 @@ const Profile = ({ profile, onBack, onToggleVisited, topo, onUpdateName, onUnloc
                                 whileTap={{ scale: 0.95 }}
                             >
                                 <MapPin size={20} />
-                                Launch Ashwin Mode
+                                View Visited Countries
                             </motion.button>
                         </div>
                     </motion.div>
@@ -165,8 +165,8 @@ const Profile = ({ profile, onBack, onToggleVisited, topo, onUpdateName, onUnloc
                         exit={{ opacity: 0 }}
                     >
                         <Lock size={48} className="lock-icon" />
-                        <h3>Ashwin Mode Locked</h3>
-                        <p>Perform the secret sequence on the Atlasly logo to unlock Ashwin Mode and track your real-life travel journey.</p>
+                        <h3>Visited Countries Locked</h3>
+                        <p>Perform the secret sequence on the Atlasly logo to unlock Visited Countries and track your real-life travel journey.</p>
                         <motion.button
                             className="btn btn-primary"
                             style={{ marginTop: '1.5rem' }}
@@ -174,7 +174,7 @@ const Profile = ({ profile, onBack, onToggleVisited, topo, onUpdateName, onUnloc
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            Unlock Ashwin Mode (Testing)
+                            Unlock Visited Countries (Testing)
                         </motion.button>
                     </motion.div>
                 )}
