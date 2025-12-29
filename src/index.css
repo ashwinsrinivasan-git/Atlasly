@@ -244,3 +244,55 @@ p {
     outline: none;
     -webkit-tap-highlight-color: transparent;
 }
+
+/* Viewport Optimization - Fit all content without scrolling */
+html,
+body,
+#root {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+}
+
+#root {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-root {
+    min-height: 100vh;
+    max-height: 100vh;
+    background-color: var(--bg-primary);
+    transition: background-color var(--transition-speed);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+/* Ensure containers fit viewport */
+.landing-container,
+.profile-container {
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.75rem, 2vh, 1.5rem);
+    padding: clamp(0.5rem, 1.5vh, 1rem) 0;
+}
+
+/* Compact stats and content */
+.stats-grid {
+    flex-shrink: 0;
+}
+
+.profile-header,
+.stat-card,
+.map-launch-section {
+    flex-shrink: 0;
+}
