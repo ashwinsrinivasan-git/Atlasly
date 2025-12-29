@@ -3,6 +3,8 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signOut,
     onAuthStateChanged,
     updateProfile
@@ -145,18 +147,14 @@ export const AuthProvider = ({ children }) => {
         return await signInWithEmailAndPassword(auth, email, password);
     };
 
-    // Sign in with Google
+    // Sign in with Google (using redirect for better reliability)
     const loginWithGoogle = async () => {
-        const result = await signInWithPopup(auth, googleProvider);
-        await createUserProfile(result.user);
-        return result;
+        return await signInWithRedirect(auth, googleProvider);
     };
 
-    // Sign in with GitHub
+    // Sign in with GitHub (using redirect for better reliability)
     const loginWithGithub = async () => {
-        const result = await signInWithPopup(auth, githubProvider);
-        await createUserProfile(result.user);
-        return result;
+        return await signInWithRedirect(auth, githubProvider);
     };
 
     // Sign out
@@ -176,6 +174,22 @@ export const AuthProvider = ({ children }) => {
         // Update local state
         setUserProfile(prev => ({ ...prev, ...updates }));
     };
+
+    // Handle redirect result from Google sign-in
+    useEffect(() => {
+        const handleRedirect = async () => {
+            try {
+                const result = await getRedirectResult(auth);
+                if (result && result.user) {
+                    console.log('[AuthContext] Redirect sign-in successful:', result.user.email);
+                    await createUserProfile(result.user);
+                }
+            } catch (error) {
+                console.error('[AuthContext] Redirect error:', error);
+            }
+        };
+        handleRedirect();
+    }, []);
 
     // Listen to auth state changes
     useEffect(() => {
