@@ -147,14 +147,35 @@ export const AuthProvider = ({ children }) => {
         return await signInWithEmailAndPassword(auth, email, password);
     };
 
-    // Sign in with Google (using redirect for better reliability)
+    // Sign in with Google (using popup with enhanced error handling)
     const loginWithGoogle = async () => {
-        return await signInWithRedirect(auth, googleProvider);
+        try {
+            // Add a small delay to ensure popup isn't blocked
+            await new Promise(resolve => setTimeout(resolve, 100));
+            const result = await signInWithPopup(auth, googleProvider);
+            console.log('[AuthContext] Popup sign-in successful:', result.user.email);
+            await createUserProfile(result.user);
+            return result;
+        } catch (error) {
+            console.error('[AuthContext] Google sign-in error:', error);
+            // If popup was blocked, show helpful message
+            if (error.code === 'auth/popup-blocked') {
+                alert('Please allow popups for this site and try again.');
+            }
+            throw error;
+        }
     };
 
-    // Sign in with GitHub (using redirect for better reliability)
+    // Sign in with GitHub (using popup)
     const loginWithGithub = async () => {
-        return await signInWithRedirect(auth, githubProvider);
+        try {
+            const result = await signInWithPopup(auth, githubProvider);
+            await createUserProfile(result.user);
+            return result;
+        } catch (error) {
+            console.error('[AuthContext] GitHub sign-in error:', error);
+            throw error;
+        }
     };
 
     // Sign out
@@ -175,21 +196,6 @@ export const AuthProvider = ({ children }) => {
         setUserProfile(prev => ({ ...prev, ...updates }));
     };
 
-    // Handle redirect result from Google sign-in
-    useEffect(() => {
-        const handleRedirect = async () => {
-            try {
-                const result = await getRedirectResult(auth);
-                if (result && result.user) {
-                    console.log('[AuthContext] Redirect sign-in successful:', result.user.email);
-                    await createUserProfile(result.user);
-                }
-            } catch (error) {
-                console.error('[AuthContext] Redirect error:', error);
-            }
-        };
-        handleRedirect();
-    }, []);
 
     // Listen to auth state changes
     useEffect(() => {
