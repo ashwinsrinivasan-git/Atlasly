@@ -140,14 +140,15 @@ const Landing = ({ game, stats }) => {
                     box-shadow: var(--shadow);
                 }
 
-                h1 {
+                .hero h1 {
                     font-size: var(--font-2xl);
-                    font-weight: 800;
-                    letter-spacing: -0.03em;
-                    line-height: 1.1;
-                    background: var(--gradient-primary);
+                    font-weight: 900;
+                    margin-bottom: var(--space-xs);
+                    background: var(--gradient-accent);
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
+                    letter-spacing: -0.02em;
+                    filter: drop-shadow(0 2px 10px rgba(96, 165, 250, 0.2));
                     background-clip: text;
                 }
 

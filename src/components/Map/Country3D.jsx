@@ -10,8 +10,8 @@ import earthTextureSrc from '../../assets/earth_texture.png';
 // Utility: Convert GeoJSON feature to Three.js Shapes
 function featureToShapes(feature) {
     const shapes = [];
-    // Increase resolution for better shape details
-    const projection = d3.geoMercator().fitSize([150, 150], feature);
+    // Higher resolution for professional shape details
+    const projection = d3.geoMercator().fitSize([200, 200], feature);
     const path = d3.geoPath().projection(projection);
 
     // We need to access the coordinates directly. 
@@ -55,11 +55,12 @@ function featureToShapes(feature) {
 const CountryMesh = ({ feature, texture }) => {
     const meshRef = useRef();
 
-    // Auto-rotation slightly
+    // Smooth, organic floating animation
     useFrame((state) => {
         if (meshRef.current) {
-            meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.1;
-            meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.1) * 0.05;
+            meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.1) * 0.1;
+            meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.05) * 0.05;
+            meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 2;
         }
     });
 
@@ -85,10 +86,10 @@ const CountryMesh = ({ feature, texture }) => {
                     {/* Face Material: Texture with some emission to prevent being too dark */}
                     <meshStandardMaterial
                         map={texture}
-                        roughness={0.5}
-                        metalness={0.1}
-                        emissive="#444444"
-                        emissiveIntensity={0.5}
+                        roughness={0.4}
+                        metalness={0.2}
+                        emissive="#111111"
+                        emissiveIntensity={0.3}
                         side={THREE.DoubleSide}
                     />
                 </mesh>
@@ -117,13 +118,15 @@ const Country3D = ({ topo, targetName }) => {
             <Canvas shadows dpr={[1, 2]}>
                 <PerspectiveCamera makeDefault position={[0, 0, 200]} fov={45} />
 
-                {/* Lighting Setup - High Key to prevent darkness */}
-                <ambientLight intensity={2.5} />
-                <hemisphereLight skyColor="#ffffff" groundColor="#444444" intensity={2.0} />
-                <directionalLight position={[50, 100, 100]} intensity={3.0} castShadow />
-                <pointLight position={[-50, -50, 50]} intensity={2.0} color="#ffffff" />
+                {/* High-end Lighting Setup */}
+                <ambientLight intensity={1.5} />
+                <hemisphereLight skyColor="#ffffff" groundColor="#000000" intensity={1.5} />
+                <directionalLight position={[100, 100, 100]} intensity={3.0} castShadow />
+                <pointLight position={[-100, -50, 50]} intensity={2.0} color="#60a5fa" />
 
-                <Environment preset="city" /> {/* Generic reflections for realism */}
+                <Environment preset="warehouse" />
+
+                {/* Subtle fog for depth if needed - skipping for now */}
 
                 <CountryMesh feature={feature} texture={texture} />
 

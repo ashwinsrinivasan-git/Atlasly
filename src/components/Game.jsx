@@ -120,23 +120,24 @@ const Game = ({ game, topo, triviaIndex }) => {
                     {guesses.map((g, i) => (
                         <motion.div
                             key={i}
-                            className="guess-item"
-                            initial={{ opacity: 0, x: -50, scale: 0.8 }}
-                            animate={{ opacity: 1, x: 0, scale: 1 }}
-                            exit={{ opacity: 0, x: 50, scale: 0.8 }}
-                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                            className="guess-pill"
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                             layout
                         >
                             <span className="guess-name">{g.country}</span>
                             <div className="guess-metrics">
-                                <span className="metric">{g.distance} km</span>
+                                <span className="metric">{g.distance.toLocaleString()} km</span>
                                 <motion.div
+                                    className="direction-icon"
                                     animate={{ rotate: g.direction }}
-                                    transition={{ type: 'spring', stiffness: 100 }}
+                                    transition={{ type: 'spring', stiffness: 200 }}
                                 >
-                                    <Navigation size={18} />
+                                    <Navigation size={14} fill="currentColor" />
                                 </motion.div>
-                                <span className="metric proximity">{g.proximity}%</span>
+                                <span className="proximity-percentage">{g.proximity}%</span>
                             </div>
                         </motion.div>
                     ))}
@@ -345,66 +346,90 @@ const Game = ({ game, topo, triviaIndex }) => {
 
                 .map-wrapper {
                     background: var(--glass-bg);
-                    backdrop-filter: blur(10px);
-                    -webkit-backdrop-filter: blur(10px);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
                     border-radius: var(--radius-xl);
                     padding: var(--space-md);
-                    /* Dynamic height constraint to keep it within view */
-                    height: clamp(200px, 35vh, 400px);
-                    max-height: 40vh;
+                    /* Enlarged viewport for professional feel */
+                    height: clamp(300px, 50vh, 550px);
+                    max-height: 55vh;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     border: 1px solid var(--glass-border);
-                    box-shadow: var(--shadow);
+                    box-shadow: var(--glass-shadow);
                     overflow: hidden; 
                     position: relative;
+                    /* Radial focal point backdrop */
+                    &::before {
+                        content: '';
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 80%;
+                        height: 80%;
+                        background: radial-gradient(circle, var(--accent-light) 0%, transparent 70%);
+                        opacity: 0.3;
+                        pointer-events: none;
+                        z-index: 0;
+                    }
                 }
 
                 .guesses-list {
                     display: flex;
-                    flex-direction: column;
-                    gap: var(--space-sm);
-                    min-height: 100px;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    gap: var(--space-xs);
+                    padding: var(--space-sm) 0;
+                    min-height: 60px;
                 }
 
-                .guess-item {
+                .guess-pill {
                     display: flex;
-                    justify-content: space-between;
                     align-items: center;
-                    flex-wrap: wrap;
-                    gap: 0.5rem;
-                    padding: var(--space-sm) var(--space-md);
+                    gap: 0.75rem;
+                    padding: 0.5rem 1rem;
                     background: var(--glass-bg);
                     backdrop-filter: blur(10px);
                     -webkit-backdrop-filter: blur(10px);
                     border: 1px solid var(--glass-border);
-                    border-radius: var(--radius-md);
+                    border-radius: var(--radius-full);
                     box-shadow: var(--shadow);
+                    transition: transform 0.2s ease;
+                }
+
+                .guess-pill:hover {
+                    transform: scale(1.02);
+                    border-color: var(--accent);
                 }
 
                 .guess-name {
-                    font-weight: 600;
-                    font-size: var(--font-base);
+                    font-weight: 700;
+                    font-size: var(--font-sm);
                     color: var(--text-primary);
-                    flex: 1;
-                    min-width: 140px;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
                 }
 
                 .guess-metrics {
                     display: flex;
                     align-items: center;
-                    gap: var(--space-sm);
+                    gap: 0.5rem;
                     color: var(--text-secondary);
-                    font-size: var(--font-sm);
+                    font-size: 12px;
+                    border-left: 1px solid var(--border);
+                    padding-left: 0.5rem;
                 }
 
-                .metric.proximity {
-                    font-weight: 700;
+                .proximity-percentage {
+                    font-weight: 800;
                     color: var(--accent);
+                    min-width: 2.5rem;
+                }
+
+                .direction-icon {
+                    color: var(--accent);
+                    display: flex;
+                    align-items: center;
                 }
                 
                 /* Input Area */
