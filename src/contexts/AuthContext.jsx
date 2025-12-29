@@ -33,13 +33,16 @@ export const AuthProvider = ({ children }) => {
         if (!user) return;
 
         const userRef = doc(db, 'users', user.uid);
-        const snapshot = await getDoc(userRef);
 
-        if (!snapshot.exists()) {
-            const { email, displayName, photoURL } = user;
-            const createdAt = serverTimestamp();
+        try {
+            const snapshot = await getDoc(userRef);
 
-            try {
+            if (!snapshot.exists()) {
+                const { email, displayName, photoURL } = user;
+                const createdAt = serverTimestamp();
+
+                console.log('[AuthContext] Creating new user profile for:', email);
+
                 await setDoc(userRef, {
                     email,
                     displayName: displayName || additionalData.displayName || 'Explorer',
@@ -55,21 +58,78 @@ export const AuthProvider = ({ children }) => {
                     ashwinMode: false,
                     ...additionalData
                 });
-            } catch (error) {
-                console.error('Error creating user profile:', error);
+            } else {
+                // Update last login
+                console.log('[AuthContext] Updating last login for:', user.email);
+                await setDoc(userRef, {
+                    lastLogin: serverTimestamp()
+                }, { merge: true });
             }
-        } else {
-            // Update last login
-            await setDoc(userRef, {
-                lastLogin: serverTimestamp()
-            }, { merge: true });
-        }
 
-        // Fetch and set profile
-        const updatedSnapshot = await getDoc(userRef);
-        const profileData = updatedSnapshot.data();
-        setUserProfile(profileData);
-        setIsAdmin(profileData?.role === 'admin');
+            // Fetch and set profile
+            const updatedSnapshot = await getDoc(userRef);
+            const profileData = updatedSnapshot.data();
+
+            if (profileData) {
+                // CRITICAL: Always enforce admin role based on email, even if Firestore has wrong value
+                if (user.email === adminEmail && profileData.role !== 'admin') {
+                    console.warn('[AuthContext] Correcting admin role in Firestore');
+                    await setDoc(userRef, { role: 'admin' }, { merge: true });
+                    profileData.role = 'admin';
+                }
+
+                console.log('[AuthContext] Profile loaded:', { email: profileData.email, role: profileData.role, level: profileData.level });
+                setUserProfile(profileData);
+                setIsAdmin(profileData.role === 'admin');
+            } else {
+                throw new Error('Profile data is empty after fetch');
+            }
+
+        } catch (error) {
+            console.error('[AuthContext] Error in createUserProfile:', error);
+
+            // Fallback: Create a minimal profile from user auth data
+            const { email, displayName, photoURL } = user;
+            const fallbackProfile = {
+                email,
+                displayName: displayName || 'Explorer',
+                photoURL: photoURL || null,
+                role: email === adminEmail ? 'admin' : 'user',
+                level: 1,
+                xp: 0,
+                visited: [],
+                guessed: [],
+                ashwinMode: false
+            };
+
+            console.warn('[AuthContext] Using fallback profile:', fallbackProfile);
+            setUserProfile(fallbackProfile);
+            setIsAdmin(fallbackProfile.role === 'admin');
+
+            // Try again in 3 seconds
+            setTimeout(async () => {
+                console.log('[AuthContext] Retrying profile fetch...');
+                try {
+                    const retrySnapshot = await getDoc(userRef);
+                    if (retrySnapshot.exists()) {
+                        const retryData = retrySnapshot.data();
+
+                        // CRITICAL: Always enforce admin role based on email
+                        if (user.email === adminEmail && retryData.role !== 'admin') {
+                            console.warn('[AuthContext] Fixing admin role mismatch in Firestore');
+                            await setDoc(userRef, { role: 'admin' }, { merge: true });
+                            retryData.role = 'admin';
+                        }
+
+                        console.log('[AuthContext] Retry successful:', { email: retryData.email, role: retryData.role });
+                        setUserProfile(retryData);
+                        setIsAdmin(retryData.role === 'admin');
+                    }
+                } catch (retryError) {
+                    console.error('[AuthContext] Retry failed:', retryError);
+                }
+            }, 3000);
+        }
     };
 
     // Sign up with email and password
@@ -119,10 +179,26 @@ export const AuthProvider = ({ children }) => {
 
     // Listen to auth state changes
     useEffect(() => {
+        console.log('[AuthContext] Initializing auth listener...');
+
+        // Safety timeout - if loading takes too long, force render anyway
+        const timeoutId = setTimeout(() => {
+            console.warn('[AuthContext] Auth initialization timeout - forcing render');
+            setLoading(false);
+        }, 5000); // 5 second timeout
+
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            console.log('[AuthContext] Auth state changed:', user ? `User: ${user.email}` : 'No user');
+            clearTimeout(timeoutId); // Clear timeout if auth resolves
+
             setCurrentUser(user);
             if (user) {
-                await createUserProfile(user);
+                try {
+                    await createUserProfile(user);
+                    console.log('[AuthContext] User profile loaded successfully');
+                } catch (error) {
+                    console.error('[AuthContext] Error loading user profile:', error);
+                }
             } else {
                 setUserProfile(null);
                 setIsAdmin(false);
@@ -130,7 +206,10 @@ export const AuthProvider = ({ children }) => {
             setLoading(false);
         });
 
-        return unsubscribe;
+        return () => {
+            clearTimeout(timeoutId);
+            unsubscribe();
+        };
     }, []);
 
     const value = {

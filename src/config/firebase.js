@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 
 // Firebase configuration - Replace with your actual config from Firebase Console
 // To get this: https://console.firebase.google.com/ -> Project Settings -> Your apps
@@ -18,7 +18,13 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize services
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// Initialize Firestore with memory-only cache (no offline persistence)
+export const db = initializeFirestore(app, {
+    localCache: {
+        kind: 'memory'
+    }
+});
 
 // Auth providers
 export const googleProvider = new GoogleAuthProvider();

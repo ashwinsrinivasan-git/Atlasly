@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Diagnostic</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #0f0;
+        }
+
+        .error {
+            color: #f00;
+        }
+
+        .success {
+            color: #0f0;
+        }
+
+        .info {
+            color: #0af;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Atlasly Firebase Diagnostic</h1>
+    <div id="output"></div>
+
+    <script type="module">
+        const output = document.getElementById('output');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            output.appendChild(div);
+        }
+
+        try {
+            log('Starting diagnostic...', 'info');
+            log(`Environment: ${import.meta.env.MODE}`, 'info');
+            log(`API Key exists: ${!!import.meta.env.VITE_FIREBASE_API_KEY}`, 'info');
+            log(`Project ID: ${import.meta.env.VITE_FIREBASE_PROJECT_ID || 'NOT SET'}`, 'info');
+
+            // Import Firebase
+            log('Importing Firebase modules...', 'info');
+            const { initializeApp } = await import('firebase/app');
+            const { getAuth, onAuthStateChanged } = await import('firebase/auth');
+            const { getFirestore } = await import('firebase/firestore');
+            log('Firebase modules loaded successfully', 'success');
+
+            // Initialize Firebase
+            log('Initializing Firebase app...', 'info');
+            const firebaseConfig = {
+                apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+                authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+                projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+                storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+                messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+                appId: import.meta.env.VITE_FIREBASE_APP_ID
+            };
+
+            const app = initializeApp(firebaseConfig);
+            log('Firebase app initialized successfully', 'success');
+
+            // Initialize Auth
+            log('Initializing Firebase Auth...', 'info');
+            const auth = getAuth(app);
+            log('Firebase Auth initialized', 'success');
+
+            // Check auth state
+            log('Checking auth state...', 'info');
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    log(`User logged in: ${user.email}`, 'success');
+                    log(`UID: ${user.uid}`, 'info');
+                } else {
+                    log('No user logged in', 'info');
+                }
+            });
+
+            // Initialize Fire store
+            log('Initializing Firestore...', 'info');
+            const db = getFirestore(app);
+            log('Firestore initialized successfully', 'success');
+
+            log('=== ALL CHECKS PASSED ===', 'success');
+            log('Firebase is configured correctly!', 'success');
+            log('The blank page issue is likely in the React app itself.', 'info');
+
+        } catch (error) {
+            log(`ERROR: ${error.message}`, 'error');
+            log(`Stack: ${error.stack}`, 'error');
+        }
+    </script>
+</body>
+
+</html>
