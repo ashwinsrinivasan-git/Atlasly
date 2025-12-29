@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, GithubAuthProvider, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
 
 // Firebase configuration
@@ -21,6 +21,11 @@ const app = initializeApp(firebaseConfig);
 // Initialize services
 export const auth = getAuth(app);
 
+// Set auth persistence to local (survives browser restart)
+setPersistence(auth, browserLocalPersistence).catch(error => {
+    console.error('[Firebase] Failed to set persistence:', error);
+});
+
 // Initialize Firestore with memory-only cache (no offline persistence)
 export const db = initializeFirestore(app, {
     localCache: {
@@ -31,10 +36,5 @@ export const db = initializeFirestore(app, {
 // Auth providers
 export const googleProvider = new GoogleAuthProvider();
 export const githubProvider = new GithubAuthProvider();
-
-// Configure providers
-googleProvider.setCustomParameters({
-    prompt: 'select_account'
-});
 
 export default app;
