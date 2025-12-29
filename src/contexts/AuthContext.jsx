@@ -30,67 +30,71 @@ export const AuthProvider = ({ children }) => {
 
     const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'admin@atlasly.com';
 
-    // Create or update user profile in Firestore
+    // Create or update user profile in Firestore (optimized for speed)
     const createUserProfile = async (user, additionalData = {}) => {
         if (!user) return;
 
         const userRef = doc(db, 'users', user.uid);
 
         try {
+            // Single read to get current profile
             const snapshot = await getDoc(userRef);
+            const { email, displayName, photoURL } = user;
 
             if (!snapshot.exists()) {
-                const { email, displayName, photoURL } = user;
+                // New user - create profile
                 const createdAt = serverTimestamp();
-
                 console.log('[AuthContext] Creating new user profile for:', email);
 
-                await setDoc(userRef, {
+                const newProfile = {
                     email,
                     displayName: displayName || additionalData.displayName || 'Explorer',
                     photoURL: photoURL || null,
                     createdAt,
                     lastLogin: createdAt,
                     role: email === adminEmail ? 'admin' : 'user',
-                    // Game profile
                     level: 1,
                     xp: 0,
                     visited: [],
                     guessed: [],
                     ashwinMode: false,
                     ...additionalData
-                });
+                };
+
+                await setDoc(userRef, newProfile);
+                setUserProfile(newProfile);
+                setIsAdmin(newProfile.role === 'admin');
+                console.log('[AuthContext] New profile created');
             } else {
-                // Update last login
-                console.log('[AuthContext] Updating last login for:', user.email);
-                await setDoc(userRef, {
-                    lastLogin: serverTimestamp()
-                }, { merge: true });
-            }
+                // Existing user - use cached data, update lastLogin in background
+                let profileData = snapshot.data();
 
-            // Fetch and set profile
-            const updatedSnapshot = await getDoc(userRef);
-            const profileData = updatedSnapshot.data();
+                // Enforce admin role based on email
+                const shouldBeAdmin = email === adminEmail;
+                const needsRoleUpdate = shouldBeAdmin && profileData.role !== 'admin';
 
-            if (profileData) {
-                // CRITICAL: Always enforce admin role based on email, even if Firestore has wrong value
-                if (user.email === adminEmail && profileData.role !== 'admin') {
-                    console.warn('[AuthContext] Correcting admin role in Firestore');
-                    await setDoc(userRef, { role: 'admin' }, { merge: true });
+                if (needsRoleUpdate) {
+                    console.warn('[AuthContext] Correcting admin role');
                     profileData.role = 'admin';
                 }
 
-                console.log('[AuthContext] Profile loaded:', { email: profileData.email, role: profileData.role, level: profileData.level });
+                // Set profile immediately (fast!)
                 setUserProfile(profileData);
                 setIsAdmin(profileData.role === 'admin');
-            } else {
-                throw new Error('Profile data is empty after fetch');
+                console.log('[AuthContext] Profile loaded:', { email: profileData.email, role: profileData.role, level: profileData.level });
+
+                // Update lastLogin and role in background (don't wait)
+                const updates = { lastLogin: serverTimestamp() };
+                if (needsRoleUpdate) updates.role = 'admin';
+                setDoc(userRef, updates, { merge: true }).catch(e =>
+                    console.error('[AuthContext] Background update failed:', e)
+                );
             }
 
         } catch (error) {
             console.error('[AuthContext] Error in createUserProfile:', error);
 
-            // Fallback: Create a minimal profile from user auth data
+            // Fallback profile
             const { email, displayName, photoURL } = user;
             const fallbackProfile = {
                 email,
@@ -201,11 +205,11 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         console.log('[AuthContext] Initializing auth listener...');
 
-        // Safety timeout - reduced for faster page load
+        // Safety timeout - minimal for fast load
         const timeoutId = setTimeout(() => {
             console.warn('[AuthContext] Auth initialization timeout - forcing render');
             setLoading(false);
-        }, 2000); // 2 second timeout (reduced from 5s)
+        }, 1000); // 1 second timeout for fastest load
 
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             console.log('[AuthContext] Auth state changed:', user ? `User: ${user.email}` : 'No user');
