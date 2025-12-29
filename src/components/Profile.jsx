@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import WorldGlobe from './Map/WorldGlobe';
-import { Globe, MapPin, User, Star, Edit2, Check, Lock } from 'lucide-react';
+import { Globe, MapPin, User, Star, Edit2, Check, Lock, Shield } from 'lucide-react';
 
-const Profile = ({ profile, onBack, onToggleVisited, topo, onUpdateName, onUnlockAshwin, onViewSolvedMap }) => {
+const Profile = ({ profile, onBack, onToggleVisited, topo, onUpdateName, onUnlockAshwin, onViewSolvedMap, isAdmin, onViewAdmin }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [tempName, setTempName] = useState(profile.name);
 
@@ -52,9 +52,22 @@ const Profile = ({ profile, onBack, onToggleVisited, topo, onUpdateName, onUnloc
                     </div>
                 </div>
 
-                <button className="btn btn-ghost" onClick={onBack}>
-                    Back to Menu
-                </button>
+                <div className="profile-actions">
+                    {isAdmin && (
+                        <motion.button
+                            className="btn btn-admin"
+                            onClick={onViewAdmin}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <Shield size={18} />
+                            Admin Panel
+                        </motion.button>
+                    )}
+                    <button className="btn btn-ghost" onClick={onBack}>
+                        Back to Menu
+                    </button>
+                </div>
             </motion.div>
 
             <motion.div
@@ -218,6 +231,27 @@ const Profile = ({ profile, onBack, onToggleVisited, topo, onUpdateName, onUnloc
                     display: flex;
                     align-items: center;
                     gap: 0.75rem;
+                }
+                
+                .profile-actions {
+                    display: flex;
+                    gap: var(--space-sm);
+                    align-items: center;
+                }
+                
+                .btn-admin {
+                    display: flex;
+                    align-items: center;
+                    gap: var(--space-xs);
+                    background: linear-gradient(135deg, #f59e0b, #d97706);
+                    color: white;
+                    border: none;
+                    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+                }
+                
+                .btn-admin:hover {
+                    background: linear-gradient(135deg, #d97706, #b45309);
+                    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
                 }
                 
                 .ashwin-tag {

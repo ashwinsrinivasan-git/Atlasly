@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Globe, Sun, Moon, User } from 'lucide-react';
+import { Globe, Sun, Moon, User, LogOut, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
 
-const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin }) => {
+const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin, isAdmin, onViewAdmin }) => {
+    const { logout, currentUser } = useAuth();
     const clickCount = useRef(0);
     const [lastClick, setLastClick] = useState(0);
     const [theme, setTheme] = useState(() => localStorage.getItem('atlaslyTheme') || 'light');
@@ -77,6 +79,17 @@ const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin
                     </motion.div>
 
                     <div className="nav-actions">
+                        {isAdmin && (
+                            <motion.button
+                                className="admin-btn"
+                                onClick={onViewAdmin}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                title="Admin Panel"
+                            >
+                                <Shield size={18} />
+                            </motion.button>
+                        )}
                         <motion.button
                             className="profile-btn"
                             onClick={onProfile}
@@ -86,6 +99,15 @@ const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin
                             <User size={18} />
                             <span className="profile-text">Profile</span>
                             {userLevel && <span className="profile-level">Lv {userLevel}</span>}
+                        </motion.button>
+                        <motion.button
+                            className="logout-btn"
+                            onClick={logout}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            title="Logout"
+                        >
+                            <LogOut size={18} />
                         </motion.button>
                         <div className="theme-selector">
                             {themes.map(({ id, icon: Icon, label }) => (
@@ -225,6 +247,40 @@ const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin
                         border-color: var(--accent);
                         background: var(--bg-primary);
                     }
+                    
+                    .admin-btn {
+                        display: flex;
+                        align-items: center;
+                        padding: 0.5rem;
+                        background: linear-gradient(135deg, #f59e0b, #d97706);
+                        border: none;
+                        border-radius: var(--radius-full);
+                        color: white;
+                        cursor: pointer;
+                        margin-right: var(--space-sm);
+                        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+                    }
+                    .admin-btn:hover {
+                        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+                    }
+                    
+                    .logout-btn {
+                        display: flex;
+                        align-items: center;
+                        padding: 0.5rem;
+                        background: var(--bg-secondary);
+                        border: 1px solid var(--border);
+                        border-radius: var(--radius-full);
+                        color: var(--text-secondary);
+                        cursor: pointer;
+                        margin-right: var(--space-sm);
+                    }
+                    .logout-btn:hover {
+                        border-color: #ef4444;
+                        color: #ef4444;
+                        background: rgba(239, 68, 68, 0.1);
+                    }
+                    
                     .profile-level {
                         background: var(--accent);
                         color: white;

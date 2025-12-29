@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
 import Loader from './components/UI/Loader';
 import { useCountryData } from './hooks/useCountryData';
@@ -9,13 +10,17 @@ import Game from './components/Game';
 import Profile from './components/Profile';
 import AshwinMode from './components/AshwinMode';
 import SolvedCountries from './components/SolvedCountries';
+import AuthPage from './components/Auth/AuthPage';
+import AdminPanel from './components/Admin/AdminPanel';
 
-function App() {
+function AuthenticatedApp() {
+  const { currentUser, isAdmin } = useAuth();
   const { isLoading, error, playable, triviaIndex, topo } = useCountryData();
   const game = useGameLogic(playable, triviaIndex);
   const { profile, addXp, toggleVisited, markGuessed, toggleAshwinMode, updateName } = useUserProfile();
   const [viewProfile, setViewProfile] = useState(false);
   const [viewSolvedMap, setViewSolvedMap] = useState(false);
+  const [viewAdmin, setViewAdmin] = useState(false);
 
   // Wrap submitGuess to track stats
   const handleGuess = (input) => {
@@ -31,23 +36,35 @@ function App() {
 
   const augmentedGame = { ...game, submitGuess: handleGuess };
 
+  // Show auth page if not logged in
+  if (!currentUser) {
+    return <AuthPage />;
+  }
+
   if (isLoading) return <Loader text="Loading world data..." />;
   if (error) return <div className="error-screen">Error loading data. Please refresh.</div>;
 
-  // Screen priority: ashwinMode > solvedMap > viewProfile > game screen
+  // Screen priority: admin > ashwinMode > solvedMap > viewProfile > game screen
   let currentScreen = game.screen;
-  if (viewProfile) currentScreen = 'profile';
-  if (viewSolvedMap) currentScreen = 'solvedMap';
-  if (profile.ashwinMode && !viewProfile && !viewSolvedMap) currentScreen = 'ashwinMode';
+  if (viewAdmin) currentScreen = 'admin';
+  else if (viewProfile) currentScreen = 'profile';
+  else if (viewSolvedMap) currentScreen = 'solvedMap';
+  else if (profile.ashwinMode && !viewProfile && !viewSolvedMap) currentScreen = 'ashwinMode';
 
   return (
     <Layout
       screen={currentScreen}
-      onHome={() => { setViewProfile(false); game.setScreen('landing'); }}
-      onProfile={() => setViewProfile(true)}
+      onHome={() => { setViewProfile(false); setViewAdmin(false); setViewSolvedMap(false); game.setScreen('landing'); }}
+      onProfile={() => { setViewProfile(true); setViewAdmin(false); }}
       userLevel={profile.level}
       onUnlockAshwin={toggleAshwinMode}
+      isAdmin={isAdmin}
+      onViewAdmin={() => { setViewAdmin(true); setViewProfile(false); }}
     >
+      {currentScreen === 'admin' && (
+        <AdminPanel onBack={() => { setViewAdmin(false); setViewProfile(true); }} />
+      )}
+
       {currentScreen === 'profile' && (
         <Profile
           profile={profile}
@@ -57,6 +74,8 @@ function App() {
           onUpdateName={updateName}
           onUnlockAshwin={toggleAshwinMode}
           onViewSolvedMap={() => setViewSolvedMap(true)}
+          isAdmin={isAdmin}
+          onViewAdmin={() => setViewAdmin(true)}
         />
       )}
 
@@ -98,6 +117,14 @@ function App() {
         />
       )}
     </Layout>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AuthenticatedApp />
+    </AuthProvider>
   );
 }
 

@@ -1,22 +1,30 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 const XP_PER_LEVEL = 500;
 
 export function useUserProfile() {
+    const { userProfile: firebaseProfile, updateUserProfile: updateFirebase, currentUser } = useAuth();
+
+    // Merge Firebase profile with local profile, Firebase takes precedence if user is logged in
     const [profile, setProfile] = useState(() => {
+        if (firebaseProfile) return firebaseProfile;
+
         try {
             const saved = localStorage.getItem('atlaslyProfile');
             return saved ? JSON.parse(saved) : {
                 name: 'Explorer',
+                displayName: 'Explorer',
                 level: 1,
                 xp: 0,
-                visited: [], // list of country names
-                guessed: [], // list of country names correctly guessed
+                visited: [],
+                guessed: [],
                 ashwinMode: false
             };
         } catch {
             return {
                 name: 'Explorer',
+                displayName: 'Explorer',
                 level: 1,
                 xp: 0,
                 visited: [],
@@ -26,43 +34,59 @@ export function useUserProfile() {
         }
     });
 
+    // Sync with Firebase when firebaseProfile changes
     useEffect(() => {
-        localStorage.setItem('atlaslyProfile', JSON.stringify(profile));
-    }, [profile]);
+        if (firebaseProfile) {
+            setProfile(firebaseProfile);
+        }
+    }, [firebaseProfile]);
 
-    const addXp = (amount) => {
-        setProfile(p => {
-            const newXp = p.xp + amount;
-            const newLevel = Math.floor(newXp / XP_PER_LEVEL) + 1;
-            return { ...p, xp: newXp, level: newLevel };
-        });
+    // Persist to localStorage for guests, Firebase for authenticated users
+    useEffect(() => {
+        if (!currentUser) {
+            localStorage.setItem('atlaslyProfile', JSON.stringify(profile));
+        }
+    }, [profile, currentUser]);
+
+    const updateBoth = async (updates) => {
+        setProfile(p => ({ ...p, ...updates }));
+        if (currentUser) {
+            await updateFirebase(updates);
+        }
     };
 
-    const toggleVisited = (countryName) => {
-        setProfile(p => {
-            const isVisited = p.visited.includes(countryName);
-            const newList = isVisited
-                ? p.visited.filter(c => c !== countryName)
-                : [...p.visited, countryName];
-            return { ...p, visited: newList };
-        });
+    const addXp = async (amount) => {
+        const newXp = profile.xp + amount;
+        const newLevel = Math.floor(newXp / XP_PER_LEVEL) + 1;
+        await updateBoth({ xp: newXp, level: newLevel });
     };
 
-    const markGuessed = (countryName) => {
-        setProfile(p => {
-            if (p.guessed.includes(countryName)) return p;
-            return { ...p, guessed: [...p.guessed, countryName] };
-        });
+    const toggleVisited = async (countryName) => {
+        const isVisited = profile.visited.includes(countryName);
+        const newList = isVisited
+            ? profile.visited.filter(c => c !== countryName)
+            : [...profile.visited, countryName];
+        await updateBoth({ visited: newList });
     };
 
-    const toggleAshwinMode = () => {
-        setProfile(p => ({ ...p, ashwinMode: !p.ashwinMode }));
+    const markGuessed = async (countryName) => {
+        if (profile.guessed.includes(countryName)) return;
+        await updateBoth({ guessed: [...profile.guessed, countryName] });
     };
 
-    const updateName = (name) => setProfile(p => ({ ...p, name }));
+    const toggleAshwinMode = async () => {
+        await updateBoth({ ashwinMode: !profile.ashwinMode });
+    };
+
+    const updateName = async (name) => {
+        await updateBoth({ name, displayName: name });
+    };
 
     return {
-        profile,
+        profile: {
+            ...profile,
+            name: profile.displayName || profile.name || 'Explorer'
+        },
         addXp,
         markGuessed,
         toggleAshwinMode,
