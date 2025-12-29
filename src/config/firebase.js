@@ -2,15 +2,16 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, GithubAuthProvider } from 'firebase/auth';
 import { initializeFirestore } from 'firebase/firestore';
 
-// Firebase configuration - Replace with your actual config from Firebase Console
-// To get this: https://console.firebase.google.com/ -> Project Settings -> Your apps
+// Firebase configuration
+// These values are safe to expose in client-side code
+// Security is handled by Firebase Security Rules, not by hiding these values
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "demo-api-key",
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "demo-project.firebaseapp.com",
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "demo-project",
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "demo-project.appspot.com",
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789",
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abcdef"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBSE_xD7d2SkHuMvkZGq4RkBRdRaUNINr8",
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "atlasly-fee65.firebaseapp.com",
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "atlasly-fee65",
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "atlasly-fee65.firebasestorage.app",
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "516099308670",
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:516099308670:web:1d0d7bf11c14729d43a0fb"
 };
 
 // Initialize Firebase
