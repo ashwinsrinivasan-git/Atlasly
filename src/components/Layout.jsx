@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Globe, Sun, Moon, User, LogOut, Shield } from 'lucide-react';
+import { Globe, Sun, Moon, User, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -79,37 +79,18 @@ const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin
                     </motion.div>
 
                     <div className="nav-actions">
-                        {isAdmin && (
-                            <motion.button
-                                className="admin-btn"
-                                onClick={onViewAdmin}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                title="Admin Panel"
-                            >
-                                <Shield size={18} />
-                            </motion.button>
-                        )}
                         <motion.button
                             className="profile-btn"
                             onClick={onProfile}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            <User size={18} />
+                            <User size={16} />
                             <span className="profile-text">Profile</span>
                             {userLevel && <span className="profile-level">Lv {userLevel}</span>}
                         </motion.button>
-                        <motion.button
-                            className="logout-btn"
-                            onClick={logout}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            title="Logout"
-                        >
-                            <LogOut size={18} />
-                        </motion.button>
-                        <div className="theme-selector">
+
+                        <div className="theme-selector mobile-hide">
                             {themes.map(({ id, icon: Icon, label }) => (
                                 <motion.button
                                     key={id}
@@ -120,13 +101,23 @@ const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin
                                     title={label}
                                 >
                                     {typeof Icon === 'string' ? (
-                                        <span style={{ fontSize: '14px' }}>{Icon}</span>
+                                        <span style={{ fontSize: '12px' }}>{Icon}</span>
                                     ) : (
-                                        <Icon size={18} />
+                                        <Icon size={16} />
                                     )}
                                 </motion.button>
                             ))}
                         </div>
+
+                        <motion.button
+                            className="logout-btn"
+                            onClick={logout}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            title="Logout"
+                        >
+                            <LogOut size={16} />
+                        </motion.button>
                     </div>
                 </motion.nav>
             )}
@@ -225,8 +216,10 @@ const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin
                 .main-content {
                     max-width: 1200px;
                     margin: 0 auto;
-                    padding: var(--space-lg) var(--space-md);
-                    min-height: calc(100vh - 80px);
+                    padding: var(--space-md);
+                    height: calc(100vh - 64px);
+                    display: flex;
+                    flex-direction: column;
                 }
 
                     .profile-btn {
@@ -246,22 +239,6 @@ const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin
                     .profile-btn:hover {
                         border-color: var(--accent);
                         background: var(--bg-primary);
-                    }
-                    
-                    .admin-btn {
-                        display: flex;
-                        align-items: center;
-                        padding: 0.5rem;
-                        background: linear-gradient(135deg, #f59e0b, #d97706);
-                        border: none;
-                        border-radius: var(--radius-full);
-                        color: white;
-                        cursor: pointer;
-                        margin-right: var(--space-sm);
-                        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-                    }
-                    .admin-btn:hover {
-                        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
                     }
                     
                     .logout-btn {
@@ -290,11 +267,21 @@ const Layout = ({ children, screen, onHome, onProfile, userLevel, onUnlockAshwin
                     }
                     @media (max-width: 640px) {
                         .profile-text { display: none; }
+                        .mobile-hide { display: none; }
                         .top-nav {
-                            padding: var(--space-sm) var(--space-md);
+                            padding: var(--space-xs) var(--space-md);
+                            height: 64px;
                         }
                         .brand-name {
                             font-size: var(--font-base);
+                        }
+                        .profile-btn {
+                            padding: 0.4rem 0.6rem;
+                            margin-right: var(--space-xs);
+                        }
+                        .logout-btn {
+                            padding: 0.4rem;
+                            margin-right: var(--space-xs);
                         }
                     }
 

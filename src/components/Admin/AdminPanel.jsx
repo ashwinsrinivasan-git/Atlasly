@@ -3,23 +3,17 @@ import { motion } from 'framer-motion';
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { Users, Shield, Trash2, Crown, User as UserIcon, Mail, Calendar, Activity, Search, ArrowLeft } from 'lucide-react';
+import { Users, Shield, Trash2, Crown, User as UserIcon, Search, ArrowLeft, Activity } from 'lucide-react';
 
 const AdminPanel = ({ onBack }) => {
   const { isAdmin } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    admins: 0,
-    activeToday: 0
-  });
+  const [stats, setStats] = useState({ totalUsers: 0, admins: 0, activeToday: 0 });
 
   useEffect(() => {
-    if (isAdmin) {
-      fetchUsers();
-    }
+    if (isAdmin) fetchUsers();
   }, [isAdmin]);
 
   const fetchUsers = async () => {
@@ -28,20 +22,15 @@ const AdminPanel = ({ onBack }) => {
       const usersRef = collection(db, 'users');
       const q = query(usersRef, orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
-
       const usersData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate(),
         lastLogin: doc.data().lastLogin?.toDate()
       }));
-
       setUsers(usersData);
-
-      // Calculate stats
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
       setStats({
         totalUsers: usersData.length,
         admins: usersData.filter(u => u.role === 'admin').length,
@@ -57,27 +46,20 @@ const AdminPanel = ({ onBack }) => {
   const toggleAdmin = async (userId, currentRole) => {
     try {
       const userRef = doc(db, 'users', userId);
-      const newRole = currentRole === 'admin' ? 'user' : 'admin';
-      await updateDoc(userRef, { role: newRole });
-      fetchUsers(); // Refresh list
+      await updateDoc(userRef, { role: currentRole === 'admin' ? 'user' : 'admin' });
+      fetchUsers();
     } catch (error) {
       console.error('Error updating user role:', error);
-      alert('Failed to update user role');
     }
   };
 
   const deleteUser = async (userId) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      return;
-    }
-
+    if (!confirm('Delete this user?')) return;
     try {
-      const userRef = doc(db, 'users', userId);
-      await deleteDoc(userRef);
-      fetchUsers(); // Refresh list
+      await deleteDoc(doc(db, 'users', userId));
+      fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Failed to delete user');
     }
   };
 
@@ -88,374 +70,224 @@ const AdminPanel = ({ onBack }) => {
 
   if (!isAdmin) {
     return (
-      <div className="admin-unauthorized">
-        <Shield size={64} className="unauthorized-icon" />
-        <h2>Access Denied</h2>
-        <p>You don't have permission to access the admin panel.</p>
-        <button className="btn btn-primary" onClick={onBack}>Go Back</button>
+      <div className="admin-denied">
+        <Shield size={32} />
+        <span>Access Denied</span>
+        <button onClick={onBack}>Back</button>
       </div>
     );
   }
 
-  if (loading) {
-    return <div className="admin-loading">Loading users...</div>;
-  }
-
   return (
-    <div className="admin-panel">
-      <motion.div
-        className="admin-header"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <div className="admin-title">
-          <button className="btn btn-ghost" onClick={onBack}>
-            <ArrowLeft size={20} />
-            Back
-          </button>
-          <div>
-            <h1>
-              <Shield size={28} />
-              Admin Panel
-            </h1>
-            <p>User Management Dashboard</p>
-          </div>
+    <div className="admin-compact">
+      {/* Header Row */}
+      <div className="admin-top">
+        <button className="back-btn" onClick={onBack}><ArrowLeft size={16} /></button>
+        <div className="admin-title"><Shield size={16} /> Admin</div>
+        <div className="stats-inline">
+          <span><Users size={12} /> {stats.totalUsers}</span>
+          <span><Crown size={12} /> {stats.admins}</span>
+          <span><Activity size={12} /> {stats.activeToday}</span>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div
-        className="stats-row"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <div className="stat-box">
-          <Users className="stat-icon" />
-          <div className="stat-content">
-            <div className="stat-value">{stats.totalUsers}</div>
-            <div className="stat-label">Total Users</div>
-          </div>
-        </div>
-
-        <div className="stat-box">
-          <Crown className="stat-icon admin" />
-          <div className="stat-content">
-            <div className="stat-value">{stats.admins}</div>
-            <div className="stat-label">Admins</div>
-          </div>
-        </div>
-
-        <div className="stat-box">
-          <Activity className="stat-icon active" />
-          <div className="stat-content">
-            <div className="stat-value">{stats.activeToday}</div>
-            <div className="stat-label">Active Today</div>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div
-        className="search-bar"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        <Search className="search-icon" size={18} />
+      {/* Search */}
+      <div className="search-compact">
+        <Search size={14} />
         <input
           type="text"
-          placeholder="Search users by name or email..."
+          placeholder="Search..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-      </motion.div>
+      </div>
 
-      <motion.div
-        className="users-table-container"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-      >
-        <table className="users-table">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Level</th>
-              <th>XP</th>
-              <th>Joined</th>
-              <th>Last Login</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((user, index) => (
-              <motion.tr
-                key={user.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <td>
-                  <div className="user-cell">
-                    {user.photoURL ? (
-                      <img src={user.photoURL} alt={user.displayName} className="user-avatar" />
-                    ) : (
-                      <div className="user-avatar-placeholder">
-                        <UserIcon size={16} />
-                      </div>
-                    )}
-                    <span>{user.displayName || 'Unknown'}</span>
-                  </div>
-                </td>
-                <td>
-                  <div className="email-cell">
-                    <Mail size={14} />
-                    {user.email}
-                  </div>
-                </td>
-                <td>
-                  <span className={`role-badge ${user.role}`}>
-                    {user.role === 'admin' ? <Crown size={12} /> : <UserIcon size={12} />}
-                    {user.role || 'user'}
-                  </span>
-                </td>
-                <td>{user.level || 1}</td>
-                <td>{user.xp || 0}</td>
-                <td>
-                  {user.createdAt ? (
-                    <div className="date-cell">
-                      <Calendar size={14} />
-                      {user.createdAt.toLocaleDateString()}
-                    </div>
-                  ) : 'N/A'}
-                </td>
-                <td>
-                  {user.lastLogin ? (
-                    <div className="date-cell">
-                      {user.lastLogin.toLocaleDateString()}
-                    </div>
-                  ) : 'Never'}
-                </td>
-                <td>
-                  <div className="action-buttons">
-                    <button
-                      className="btn-action toggle-admin"
-                      onClick={() => toggleAdmin(user.id, user.role)}
-                      title={user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
-                    >
-                      <Crown size={16} />
-                    </button>
-                    <button
-                      className="btn-action delete"
-                      onClick={() => deleteUser(user.id)}
-                      title="Delete User"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </motion.tr>
-            ))}
-          </tbody>
-        </table>
-
-        {filteredUsers.length === 0 && (
-          <div className="no-users">
-            <Users size={48} />
-            <p>No users found</p>
-          </div>
-        )}
-      </motion.div>
+      {/* User List */}
+      {loading ? (
+        <div className="loading-msg">Loading...</div>
+      ) : (
+        <div className="user-list">
+          {filteredUsers.map(user => (
+            <motion.div
+              key={user.id}
+              className="user-row"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <div className="user-info">
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="" className="avatar-tiny" />
+                ) : (
+                  <div className="avatar-tiny placeholder"><UserIcon size={10} /></div>
+                )}
+                <div className="user-details">
+                  <span className="user-name">{user.displayName || 'Unknown'}</span>
+                  <span className="user-email">{user.email}</span>
+                </div>
+              </div>
+              <div className="user-meta">
+                <span className={`role-pill ${user.role || 'user'}`}>
+                  {user.role === 'admin' ? '👑' : '👤'}
+                </span>
+                <span className="level-pill">Lv{user.level || 1}</span>
+              </div>
+              <div className="user-actions">
+                <button
+                  className="act-btn crown"
+                  onClick={() => toggleAdmin(user.id, user.role)}
+                  title={user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                >
+                  <Crown size={12} />
+                </button>
+                <button
+                  className="act-btn delete"
+                  onClick={() => deleteUser(user.id)}
+                  title="Delete"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            </motion.div>
+          ))}
+          {filteredUsers.length === 0 && (
+            <div className="no-results">No users found</div>
+          )}
+        </div>
+      )}
 
       <style>{`
-        .admin-panel {
-          max-width: 1400px;
-          margin: 0 auto;
-          padding: var(--space-lg);
-        }
-
-        .admin-unauthorized {
-          min-height: 60vh;
+        .admin-compact {
           display: flex;
           flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          gap: var(--space-md);
+          gap: 6px;
+          height: 100%;
+          overflow: hidden;
+          padding: 8px;
         }
 
-        .unauthorized-icon {
-          color: var(--text-muted);
-        }
-
-        .admin-loading {
-          min-height: 60vh;
+        .admin-denied {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 1.25rem;
-          color: var(--text-secondary);
+          gap: 8px;
+          height: 100%;
+          color: var(--text-muted);
+        }
+        .admin-denied button {
+          padding: 4px 12px;
+          background: var(--accent);
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
         }
 
-        .admin-header {
-          margin-bottom: var(--space-xl);
+        .admin-top {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 8px;
+          background: var(--glass-bg);
+          border: 1px solid var(--glass-border);
+          border-radius: 8px;
         }
+
+        .back-btn {
+          background: none;
+          border: none;
+          color: var(--text-secondary);
+          padding: 4px;
+          display: flex;
+          cursor: pointer;
+        }
+        .back-btn:hover { color: var(--text-primary); }
 
         .admin-title {
           display: flex;
           align-items: center;
-          gap: var(--space-lg);
-        }
-
-        .admin-title h1 {
-          display: flex;
-          align-items: center;
-          gap: var(--space-sm);
-          margin: 0;
-          font-size: 2rem;
-        }
-
-        .admin-title p {
-          margin: 0;
-          color: var(--text-secondary);
-        }
-
-        .stats-row {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: var(--space-md);
-          margin-bottom: var(--space-xl);
-        }
-
-        .stat-box {
-          background: var(--glass-bg);
-          border: 1px solid var(--glass-border);
-          border-radius: var(--radius-lg);
-          padding: var(--space-lg);
-          display: flex;
-          align-items: center;
-          gap: var(--space-md);
-          box-shadow: var(--shadow);
-        }
-
-        .stat-icon {
-          width: 40px;
-          height: 40px;
-          color: var(--accent);
-        }
-
-        .stat-icon.admin {
+          gap: 4px;
+          font-weight: 700;
+          font-size: 0.9rem;
           color: #f59e0b;
         }
 
-        .stat-icon.active {
-          color: #10b981;
-        }
-
-        .stat-content {
-          flex: 1;
-        }
-
-        .stat-value {
-          font-size: 2rem;
-          font-weight: 800;
-          line-height: 1;
-        }
-
-        .stat-label {
-          color: var(--text-secondary);
-          font-size: 0.875rem;
-          margin-top: 4px;
-        }
-
-        .search-bar {
-          position: relative;
-          margin-bottom: var(--space-lg);
-        }
-
-        .search-icon {
-          position: absolute;
-          left: var(--space-md);
-          top: 50%;
-          transform: translateY(-50%);
+        .stats-inline {
+          margin-left: auto;
+          display: flex;
+          gap: 10px;
+          font-size: 0.7rem;
           color: var(--text-muted);
         }
-
-        .search-bar input {
-          width: 100%;
-          padding: var(--space-md) var(--space-md) var(--space-md) calc(var(--space-md) * 3);
-          background: var(--glass-bg);
-          border: 1px solid var(--glass-border);
-          border-radius: var(--radius-lg);
-          color: var(--text-primary);
-          font-size: 1rem;
+        .stats-inline span {
+          display: flex;
+          align-items: center;
+          gap: 3px;
         }
 
-        .search-bar input:focus {
+        .search-compact {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 10px;
+          background: var(--bg-secondary);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+        }
+        .search-compact svg { color: var(--text-muted); flex-shrink: 0; }
+        .search-compact input {
+          flex: 1;
+          background: none;
+          border: none;
+          color: var(--text-primary);
+          font-size: 0.8rem;
           outline: none;
+        }
+
+        .loading-msg {
+          padding: 20px;
+          text-align: center;
+          color: var(--text-muted);
+          font-size: 0.8rem;
+        }
+
+        .user-list {
+          flex: 1;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .user-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 8px;
+          background: var(--bg-tertiary);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          font-size: 0.75rem;
+        }
+        .user-row:hover {
+          background: var(--glass-bg);
           border-color: var(--accent);
         }
 
-        .users-table-container {
-          background: var(--glass-bg);
-          border: 1px solid var(--glass-border);
-          border-radius: var(--radius-lg);
-          overflow: hidden;
-          box-shadow: var(--shadow-lg);
-        }
-
-        .users-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-
-        .users-table thead {
-          background: var(--bg-secondary);
-          border-bottom: 1px solid var(--border);
-        }
-
-        .users-table th {
-          padding: var(--space-md);
-          text-align: left;
-          font-weight: 600;
-          color: var(--text-secondary);
-          font-size: 0.875rem;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .users-table tbody tr {
-          border-bottom: 1px solid var(--border);
-          transition: background var(--transition-speed);
-        }
-
-        .users-table tbody tr:hover {
-          background: var(--bg-secondary);
-        }
-
-        .users-table td {
-          padding: var(--space-md);
-          color: var(--text-primary);
-        }
-
-        .user-cell {
+        .user-info {
           display: flex;
           align-items: center;
-          gap: var(--space-sm);
+          gap: 6px;
+          flex: 1;
+          min-width: 0;
         }
 
-        .user-avatar {
-          width: 32px;
-          height: 32px;
+        .avatar-tiny {
+          width: 22px;
+          height: 22px;
           border-radius: 50%;
-          object-fit: cover;
+          flex-shrink: 0;
         }
-
-        .user-avatar-placeholder {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
+        .avatar-tiny.placeholder {
           background: var(--accent);
           display: flex;
           align-items: center;
@@ -463,105 +295,81 @@ const AdminPanel = ({ onBack }) => {
           color: white;
         }
 
-        .email-cell {
+        .user-details {
           display: flex;
-          align-items: center;
-          gap: var(--space-xs);
-          color: var(--text-secondary);
-          font-size: 0.875rem;
+          flex-direction: column;
+          min-width: 0;
         }
-
-        .date-cell {
-          display: flex;
-          align-items: center;
-          gap: var(--space-xs);
-          font-size: 0.875rem;
-          color: var(--text-secondary);
-        }
-
-        .role-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 0.75rem;
+        .user-name {
           font-weight: 600;
-          text-transform: uppercase;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .user-email {
+          color: var(--text-muted);
+          font-size: 0.65rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
-        .role-badge.admin {
-          background: rgba(245, 158, 11, 0.1);
-          color: #f59e0b;
-        }
-
-        .role-badge.user {
-          background: rgba(59, 130, 246, 0.1);
-          color: #3b82f6;
-        }
-
-        .action-buttons {
+        .user-meta {
           display: flex;
-          gap: var(--space-xs);
+          gap: 4px;
+          flex-shrink: 0;
         }
 
-        .btn-action {
-          padding: 6px;
+        .role-pill {
+          font-size: 0.65rem;
+          padding: 2px 4px;
+          border-radius: 3px;
+        }
+        .role-pill.admin { background: rgba(245, 158, 11, 0.15); }
+        .role-pill.user { background: rgba(59, 130, 246, 0.1); }
+
+        .level-pill {
+          background: var(--accent-light);
+          color: var(--accent);
+          padding: 2px 5px;
+          border-radius: 3px;
+          font-size: 0.6rem;
+          font-weight: 700;
+        }
+
+        .user-actions {
+          display: flex;
+          gap: 3px;
+          flex-shrink: 0;
+        }
+
+        .act-btn {
+          width: 22px;
+          height: 22px;
           border: none;
+          border-radius: 4px;
           background: var(--bg-secondary);
-          border-radius: var(--radius-sm);
           cursor: pointer;
-          transition: all var(--transition-speed);
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: all 0.15s;
         }
+        .act-btn.crown { color: #f59e0b; }
+        .act-btn.crown:hover { background: rgba(245, 158, 11, 0.15); }
+        .act-btn.delete { color: #ef4444; }
+        .act-btn.delete:hover { background: rgba(239, 68, 68, 0.15); }
 
-        .btn-action.toggle-admin {
-          color: #f59e0b;
-        }
-
-        .btn-action.toggle-admin:hover {
-          background: rgba(245, 158, 11, 0.1);
-        }
-
-        .btn-action.delete {
-          color: #ef4444;
-        }
-
-        .btn-action.delete:hover {
-          background: rgba(239, 68, 68, 0.1);
-        }
-
-        .no-users {
-          padding: var(--space-xl);
+        .no-results {
+          padding: 16px;
           text-align: center;
           color: var(--text-muted);
+          font-size: 0.75rem;
         }
 
-        .no-users p {
-          margin-top: var(--space-md);
-        }
-
-        @media (max-width: 1200px) {
-          .users-table-container {
-            overflow-x: auto;
-          }
-
-          .users-table {
-            min-width: 800px;
-          }
-        }
-
-        @media (max-width: 768px) {
-          .admin-title {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-
-          .stats-row {
-            grid-template-columns: 1fr;
-          }
+        @media (max-width: 480px) {
+          .user-email { display: none; }
+          .stats-inline { display: none; }
         }
       `}</style>
     </div>

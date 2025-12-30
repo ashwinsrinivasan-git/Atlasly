@@ -20,6 +20,7 @@ function AuthenticatedApp() {
   const { profile, addXp, toggleVisited, markGuessed, toggleAshwinMode, updateName } = useUserProfile();
   const [viewProfile, setViewProfile] = useState(false);
   const [viewSolvedMap, setViewSolvedMap] = useState(false);
+  const [viewAshwinMap, setViewAshwinMap] = useState(false);
   const [viewAdmin, setViewAdmin] = useState(false);
 
   // Wrap submitGuess to track stats
@@ -44,17 +45,23 @@ function AuthenticatedApp() {
   if (isLoading) return <Loader text="Loading world data..." />;
   if (error) return <div className="error-screen">Error loading data. Please refresh.</div>;
 
-  // Screen priority: admin > ashwinMode > solvedMap > viewProfile > game screen
+  // Screen priority: admin > solvedMap > ashwinMode > viewProfile > game screen
   let currentScreen = game.screen;
   if (viewAdmin) currentScreen = 'admin';
-  else if (viewProfile) currentScreen = 'profile';
   else if (viewSolvedMap) currentScreen = 'solvedMap';
-  else if (profile.ashwinMode && !viewProfile && !viewSolvedMap) currentScreen = 'ashwinMode';
+  else if (viewAshwinMap && profile.ashwinMode) currentScreen = 'ashwinMode';
+  else if (viewProfile) currentScreen = 'profile';
 
   return (
     <Layout
       screen={currentScreen}
-      onHome={() => { setViewProfile(false); setViewAdmin(false); setViewSolvedMap(false); game.setScreen('landing'); }}
+      onHome={() => {
+        setViewProfile(false);
+        setViewAdmin(false);
+        setViewSolvedMap(false);
+        setViewAshwinMap(false);
+        game.setScreen('landing');
+      }}
       onProfile={() => { setViewProfile(true); setViewAdmin(false); }}
       userLevel={profile.level}
       onUnlockAshwin={toggleAshwinMode}
@@ -73,6 +80,7 @@ function AuthenticatedApp() {
           onToggleVisited={toggleVisited}
           onUpdateName={updateName}
           onUnlockAshwin={toggleAshwinMode}
+          onViewAshwinMap={() => setViewAshwinMap(true)}
           onViewSolvedMap={() => setViewSolvedMap(true)}
           isAdmin={isAdmin}
           onViewAdmin={() => setViewAdmin(true)}
@@ -97,8 +105,8 @@ function AuthenticatedApp() {
           topo={topo}
           onToggleVisited={toggleVisited}
           onBack={() => {
-            toggleAshwinMode(); // Turn off Ashwin mode
-            setViewProfile(true); // Go back to profile
+            setViewAshwinMap(false); // Close Ashwin mode view
+            setViewProfile(true); // Return to profile
           }}
         />
       )}

@@ -106,13 +106,94 @@ const Game = ({ game, topo, triviaIndex }) => {
                 </motion.div>
             )}
 
+            {/* Progressive Clue Reveal */}
+            <div className="progressive-clues">
+                <AnimatePresence>
+                    {guesses.length >= 2 && (
+                        <motion.div
+                            className="clue-card flag-clue clue-unlocked"
+                            initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
+                            animate={{
+                                opacity: 1,
+                                scale: 1,
+                                rotate: 0,
+                                boxShadow: [
+                                    '0 0 0 0 rgba(59, 130, 246, 0)',
+                                    '0 0 20px 10px rgba(59, 130, 246, 0.4)',
+                                    '0 0 0 0 rgba(59, 130, 246, 0)'
+                                ]
+                            }}
+                            transition={{
+                                type: 'spring',
+                                stiffness: 300,
+                                damping: 15,
+                                boxShadow: { duration: 1, times: [0, 0.5, 1] }
+                            }}
+                        >
+                            <span className="clue-badge">🔓 UNLOCKED</span>
+                            <span className="clue-label">Flag Hint</span>
+                            <div className="flag-display">
+                                {targetMeta?.trivia?.flag || '🚩'}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                    {guesses.length >= 4 && (
+                        <motion.div
+                            className="clue-card fact-clue clue-unlocked"
+                            initial={{ opacity: 0, scale: 0.5, rotate: 10 }}
+                            animate={{
+                                opacity: 1,
+                                scale: 1,
+                                rotate: 0,
+                                boxShadow: [
+                                    '0 0 0 0 rgba(16, 185, 129, 0)',
+                                    '0 0 20px 10px rgba(16, 185, 129, 0.4)',
+                                    '0 0 0 0 rgba(16, 185, 129, 0)'
+                                ]
+                            }}
+                            transition={{
+                                type: 'spring',
+                                stiffness: 300,
+                                damping: 15,
+                                delay: 0.1,
+                                boxShadow: { duration: 1, times: [0, 0.5, 1] }
+                            }}
+                        >
+                            <span className="clue-badge">💡 REVEALED</span>
+                            <span className="clue-label">Fun Fact</span>
+                            <p className="fact-text">
+                                {targetMeta?.trivia?.fact || "A fascinating country in this region..."}
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
             <motion.div
-                className="map-wrapper"
+                className={`map-wrapper ${guesses.length >= 1 ? 'revealed' : 'silhouette'}`}
                 initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 }}
+                animate={{
+                    opacity: 1,
+                    scale: guesses.length >= 1 ? [0.95, 1.03, 1] : 1
+                }}
+                transition={{
+                    delay: 0.1,
+                    scale: { duration: 0.5, times: [0, 0.6, 1], ease: 'easeOut' }
+                }}
             >
                 <Country3D topo={topo} targetName={targetCountry} />
+                {guesses.length === 0 && <div className="silhouette-overlay">❓ Mystery Silhouette</div>}
+                {guesses.length === 1 && (
+                    <motion.div
+                        className="reveal-flash"
+                        initial={{ opacity: 0.8 }}
+                        animate={{ opacity: 0 }}
+                        transition={{ duration: 0.6 }}
+                    />
+                )}
             </motion.div>
 
             <div className="guesses-list">
@@ -146,117 +227,153 @@ const Game = ({ game, topo, triviaIndex }) => {
 
             <AnimatePresence mode="wait">
                 {!isComplete && (
-                    easyMode ? (
-                        <motion.div
-                            className="options-grid"
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                        >
-                            {currentOptions.map(opt => (
-                                <button
-                                    key={opt}
-                                    className="btn option-btn-main"
-                                    onClick={() => submitAndClear(opt)}
-                                >
-                                    {opt}
-                                </button>
-                            ))}
-                        </motion.div>
-                    ) : (
-                        <motion.form
-                            className="input-area"
-                            onSubmit={handleSubmit}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 20 }}
-                            style={{ position: 'relative' }}
-                            ref={suggestionsRef}
-                        >
-                            <div className="input-wrapper">
-                                <input
-                                    type="text"
-                                    className="game-input"
-                                    placeholder="Type a country name..."
-                                    value={input}
-                                    onChange={(e) => {
-                                        setInput(e.target.value);
-                                        setShowSuggestions(true);
-                                    }}
-                                    onFocus={() => setShowSuggestions(true)}
-                                    autoFocus
-                                />
-                                {showSuggestions && suggestions.length > 0 && (
-                                    <ul className="suggestions-dropdown">
-                                        {suggestions.map(c => (
-                                            <li
-                                                key={c.name}
-                                                onClick={() => {
-                                                    setInput(c.name);
-                                                    submitAndClear(c.name);
-                                                }}
-                                            >
-                                                {c.name}
-                                                {c.trivia?.region && <span className="suggestion-region">{c.trivia.region}</span>}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
-                            <motion.button
-                                type="submit"
-                                className="btn btn-primary"
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                    <div className="game-interaction-area">
+                        {easyMode ? (
+                            <motion.div
+                                className="options-grid"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
                             >
-                                Guess
-                            </motion.button>
-                        </motion.form>
-                    )
+                                {currentOptions.map(opt => (
+                                    <button
+                                        key={opt}
+                                        className="btn option-btn-main"
+                                        onClick={() => submitAndClear(opt)}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        ) : (
+                            <motion.form
+                                className="input-area"
+                                onSubmit={handleSubmit}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 20 }}
+                                style={{ position: 'relative' }}
+                                ref={suggestionsRef}
+                            >
+                                <div className="input-wrapper">
+                                    <input
+                                        type="text"
+                                        className="game-input"
+                                        placeholder="Type a country name..."
+                                        value={input}
+                                        onChange={(e) => {
+                                            setInput(e.target.value);
+                                            setShowSuggestions(true);
+                                        }}
+                                        onFocus={() => setShowSuggestions(true)}
+                                        autoFocus
+                                    />
+                                    {showSuggestions && suggestions.length > 0 && (
+                                        <ul className="suggestions-dropdown">
+                                            {suggestions.map(c => (
+                                                <li
+                                                    key={c.name}
+                                                    onClick={() => {
+                                                        setInput(c.name);
+                                                        submitAndClear(c.name);
+                                                    }}
+                                                >
+                                                    {c.name}
+                                                    {c.trivia?.region && <span className="suggestion-region">{c.trivia.region}</span>}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                                <motion.button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                >
+                                    Guess
+                                </motion.button>
+                            </motion.form>
+                        )}
+                    </div>
                 )}
             </AnimatePresence>
 
             <AnimatePresence>
                 {isComplete && (
-                    <motion.div
-                        className="result-modal"
-                        initial={{ opacity: 0, scale: 0.8, y: 50 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, y: 50 }}
-                        transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                    >
-                        <div className="result-content">
-                            <motion.h2
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                            >
-                                {hasWon ? '🎉 Outstanding!' : '🗺️ Good Try!'}
-                            </motion.h2>
-                            <p>The country was <strong>{targetCountry}</strong>.</p>
-
-                            {hasWon && <BonusRounds game={game} triviaIndex={triviaIndex} />}
-
-                            <div className="action-row">
-                                <motion.button
-                                    className="btn btn-primary"
-                                    onClick={game.startUnlimited}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                >
-                                    Play Another
-                                </motion.button>
-                                <motion.button
-                                    className="btn btn-ghost"
-                                    onClick={() => game.setScreen('landing')}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                >
-                                    Back Home
-                                </motion.button>
+                    <>
+                        {/* Victory Confetti */}
+                        {hasWon && (
+                            <div className="confetti-container">
+                                {[...Array(12)].map((_, i) => (
+                                    <motion.div
+                                        key={i}
+                                        className="confetti-piece"
+                                        initial={{
+                                            y: -20,
+                                            x: Math.random() * 300 - 150,
+                                            rotate: 0,
+                                            opacity: 1
+                                        }}
+                                        animate={{
+                                            y: 400 + Math.random() * 200,
+                                            x: Math.random() * 400 - 200,
+                                            rotate: Math.random() * 720 - 360,
+                                            opacity: 0
+                                        }}
+                                        transition={{
+                                            duration: 2 + Math.random(),
+                                            delay: i * 0.1,
+                                            ease: 'easeOut'
+                                        }}
+                                        style={{
+                                            left: `${20 + Math.random() * 60}%`,
+                                            background: ['#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'][i % 5]
+                                        }}
+                                    />
+                                ))}
                             </div>
-                        </div>
-                    </motion.div>
+                        )}
+                        <motion.div
+                            className="result-modal"
+                            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, y: 50 }}
+                            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                        >
+                            <div className="result-content">
+                                <motion.h2
+                                    initial={{ scale: 0, rotate: -10 }}
+                                    animate={{ scale: 1, rotate: 0 }}
+                                    transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 10 }}
+                                >
+                                    {hasWon ? '🎉 Outstanding!' : '🗺️ Good Try!'}
+                                </motion.h2>
+                                <p>The country was <strong>{targetCountry}</strong>.</p>
+
+                                {hasWon && <BonusRounds game={game} triviaIndex={triviaIndex} />}
+
+                                <div className="action-row">
+                                    <motion.button
+                                        className="btn btn-primary"
+                                        onClick={game.startUnlimited}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Play Another
+                                    </motion.button>
+                                    <motion.button
+                                        className="btn btn-ghost"
+                                        onClick={() => game.setScreen('landing')}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        Back Home
+                                    </motion.button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
 
@@ -266,8 +383,10 @@ const Game = ({ game, topo, triviaIndex }) => {
                     margin: 0 auto;
                     display: flex;
                     flex-direction: column;
-                    gap: var(--space-md);
-                    padding: 0 var(--space-sm);
+                    gap: var(--space-xs);
+                    padding: 0 var(--space-xs);
+                    height: 100%;
+                    overflow: hidden;
                 }
 
                 .game-header {
@@ -275,20 +394,20 @@ const Game = ({ game, topo, triviaIndex }) => {
                     justify-content: space-between;
                     align-items: center;
                     flex-wrap: wrap;
-                    gap: var(--space-sm);
+                    gap: var(--space-xs);
                 }
                 
                 .header-left {
                     display: flex;
-                    gap: 0.5rem;
+                    gap: 0.35rem;
                     align-items: center;
                 }
 
                 .info-badge {
                     font-weight: 600;
-                    font-size: var(--font-sm);
+                    font-size: 0.75rem;
                     color: var(--text-secondary);
-                    padding: 0.5rem 1rem;
+                    padding: 0.35rem 0.7rem;
                     background: var(--glass-bg);
                     backdrop-filter: blur(10px);
                     border: 1px solid var(--glass-border);
@@ -297,8 +416,8 @@ const Game = ({ game, topo, triviaIndex }) => {
                 
                 .mode-toggle {
                     font-weight: 600;
-                    font-size: var(--font-sm);
-                    padding: 0.5rem 1rem;
+                    font-size: 0.75rem;
+                    padding: 0.35rem 0.7rem;
                     background: transparent;
                     border: 1px solid var(--border);
                     color: var(--text-secondary);
@@ -335,24 +454,99 @@ const Game = ({ game, topo, triviaIndex }) => {
                 .hint-banner {
                     background: var(--accent-light);
                     color: white;
-                    padding: 0.5rem 1rem;
-                    border-radius: var(--radius-md);
-                    font-size: var(--font-sm);
+                    padding: 0.35rem 0.75rem;
+                    border-radius: var(--radius-sm);
+                    font-size: 0.75rem;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    gap: 0.5rem;
+                    gap: 0.4rem;
+                }
+
+                .progressive-clues {
+                    display: flex;
+                    gap: 6px;
+                    justify-content: center;
+                    margin-bottom: -0.5rem;
+                    z-index: 10;
+                }
+
+                .clue-card {
+                    background: var(--glass-bg);
+                    border: 1px solid var(--accent);
+                    padding: 0.35rem 0.7rem;
+                    border-radius: var(--radius-md);
+                    box-shadow: var(--shadow-lg);
+                    text-align: center;
+                    max-width: 120px;
+                }
+
+                .clue-label {
+                    font-size: 0.55rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    color: var(--accent);
+                    font-weight: 800;
+                    display: block;
+                    margin-bottom: 2px;
+                }
+
+                .flag-display {
+                    font-size: 1.5rem;
+                    line-height: 1;
+                }
+
+                .fact-clue {
+                    max-width: 160px;
+                }
+
+                .fact-text {
+                    font-size: 0.65rem;
+                    margin: 0;
+                    line-height: 1.2;
+                    color: var(--text-primary);
+                }
+
+                .clue-badge {
+                    position: absolute;
+                    top: -8px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--accent);
+                    color: white;
+                    font-size: 0.55rem;
+                    font-weight: 800;
+                    padding: 2px 8px;
+                    border-radius: var(--radius-full);
+                    white-space: nowrap;
+                    letter-spacing: 0.5px;
+                }
+
+                .flag-clue .clue-badge {
+                    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+                }
+
+                .fact-clue .clue-badge {
+                    background: linear-gradient(135deg, #10b981, #059669);
+                }
+
+                .clue-unlocked {
+                    position: relative;
+                    animation: clue-glow 2s ease-in-out infinite;
+                }
+
+                @keyframes clue-glow {
+                    0%, 100% { box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2); }
+                    50% { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4); }
                 }
 
                 .map-wrapper {
                     background: var(--glass-bg);
                     backdrop-filter: blur(20px);
                     -webkit-backdrop-filter: blur(20px);
-                    border-radius: var(--radius-xl);
-                    padding: var(--space-md);
-                    /* Enlarged viewport for professional feel */
-                    height: clamp(300px, 50vh, 550px);
-                    max-height: 55vh;
+                    border-radius: var(--radius-lg);
+                    padding: var(--space-xs);
+                    height: clamp(200px, 35vh, 380px);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -360,20 +554,60 @@ const Game = ({ game, topo, triviaIndex }) => {
                     box-shadow: var(--glass-shadow);
                     overflow: hidden; 
                     position: relative;
-                    /* Radial focal point backdrop */
-                    &::before {
-                        content: '';
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        width: 80%;
-                        height: 80%;
-                        background: radial-gradient(circle, var(--accent-light) 0%, transparent 70%);
-                        opacity: 0.3;
-                        pointer-events: none;
-                        z-index: 0;
-                    }
+                    transition: all 0.5s ease;
+                }
+
+                .map-wrapper.silhouette {
+                    filter: grayscale(0.8) drop-shadow(0 0 20px rgba(59, 130, 246, 0.4));
+                    opacity: 0.9;
+                }
+
+                .silhouette-overlay {
+                    position: absolute;
+                    bottom: 1rem;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0,0,0,0.6);
+                    color: white;
+                    padding: 4px 12px;
+                    border-radius: var(--radius-full);
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    backdrop-filter: blur(4px);
+                    border: 1px solid rgba(255,255,255,0.2);
+                }
+
+                .map-wrapper.revealed {
+                    filter: none;
+                    opacity: 1;
+                    transition: filter 0.5s ease, opacity 0.5s ease;
+                }
+
+                .reveal-flash {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+                    pointer-events: none;
+                    z-index: 10;
+                    border-radius: var(--radius-xl);
+                }
+
+                /* Radial focal point backdrop */
+                .map-wrapper::before {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 80%;
+                    height: 80%;
+                    background: radial-gradient(circle, var(--accent-light) 0%, transparent 70%);
+                    opacity: 0.3;
+                    pointer-events: none;
+                    z-index: 0;
                 }
 
                 .guesses-list {
@@ -382,17 +616,18 @@ const Game = ({ game, topo, triviaIndex }) => {
                     justify-content: center;
                     gap: var(--space-xs);
                     padding: var(--space-sm) 0;
-                    min-height: 60px;
+                    min-height: 40px;
+                    overflow-y: auto;
+                    max-height: 120px;
                 }
 
                 .guess-pill {
                     display: flex;
                     align-items: center;
                     gap: 0.75rem;
-                    padding: 0.5rem 1rem;
+                    padding: 0.4rem 0.8rem;
                     background: var(--glass-bg);
                     backdrop-filter: blur(10px);
-                    -webkit-backdrop-filter: blur(10px);
                     border: 1px solid var(--glass-border);
                     border-radius: var(--radius-full);
                     box-shadow: var(--shadow);
@@ -406,7 +641,7 @@ const Game = ({ game, topo, triviaIndex }) => {
 
                 .guess-name {
                     font-weight: 700;
-                    font-size: var(--font-sm);
+                    font-size: 0.8rem;
                     color: var(--text-primary);
                 }
 
@@ -415,7 +650,7 @@ const Game = ({ game, topo, triviaIndex }) => {
                     align-items: center;
                     gap: 0.5rem;
                     color: var(--text-secondary);
-                    font-size: 12px;
+                    font-size: 11px;
                     border-left: 1px solid var(--border);
                     padding-left: 0.5rem;
                 }
@@ -423,7 +658,7 @@ const Game = ({ game, topo, triviaIndex }) => {
                 .proximity-percentage {
                     font-weight: 800;
                     color: var(--accent);
-                    min-width: 2.5rem;
+                    min-width: 2rem;
                 }
 
                 .direction-icon {
@@ -436,27 +671,23 @@ const Game = ({ game, topo, triviaIndex }) => {
                 .input-area {
                     display: flex;
                     gap: var(--space-sm);
-                    flex-wrap: wrap;
                 }
 
                 .input-wrapper {
                     flex: 1;
                     position: relative;
-                    min-width: 200px;
                 }
 
                 .game-input {
                     width: 100%;
-                    padding: 0.875rem 1.25rem;
+                    padding: 0.75rem 1rem;
                     border-radius: var(--radius-md);
                     border: 2px solid var(--border);
                     background: var(--glass-bg);
-                    backdrop-filter: blur(10px);
-                    -webkit-backdrop-filter: blur(10px);
                     color: var(--text-primary);
-                    font-size: var(--font-base);
+                    font-size: 0.95rem;
                     outline: none;
-                    transition: all var(--transition-speed) var(--transition-smooth);
+                    transition: all var(--transition-speed);
                 }
 
                 .game-input:focus {
@@ -473,7 +704,7 @@ const Game = ({ game, topo, triviaIndex }) => {
                     border: 1px solid var(--border);
                     border-radius: var(--radius-md);
                     box-shadow: var(--shadow-lg);
-                    max-height: 200px;
+                    max-height: 150px;
                     overflow-y: auto;
                     list-style: none;
                     padding: 0;
@@ -482,19 +713,20 @@ const Game = ({ game, topo, triviaIndex }) => {
                 }
                 
                 .suggestions-dropdown li {
-                    padding: 0.75rem 1rem;
+                    padding: 0.6rem 1rem;
                     cursor: pointer;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     transition: background 0.2s;
                     border-bottom: 1px solid var(--border);
+                    font-size: 0.85rem;
                 }
                 .suggestions-dropdown li:last-child { border-bottom: none; }
                 .suggestions-dropdown li:hover { background: var(--bg-primary); }
                 
                 .suggestion-region {
-                    font-size: 0.75rem;
+                    font-size: 0.7rem;
                     color: var(--text-muted);
                     background: var(--bg-primary);
                     padding: 2px 6px;
@@ -504,18 +736,21 @@ const Game = ({ game, topo, triviaIndex }) => {
                 /* Easy Mode Options */
                 .options-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
-                    gap: 1rem;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 0.75rem;
                     width: 100%;
                 }
                 
                 .option-btn-main {
-                    padding: 1rem;
+                    padding: 0.75rem;
                     background: var(--glass-bg);
                     border: 1px solid var(--border);
                     color: var(--text-primary);
                     justify-content: center;
                     text-align: center;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    border-radius: var(--radius-md);
                 }
                 .option-btn-main:hover {
                     border-color: var(--accent);
@@ -525,21 +760,27 @@ const Game = ({ game, topo, triviaIndex }) => {
                 .result-modal {
                     background: var(--glass-bg);
                     backdrop-filter: blur(20px);
-                    -webkit-backdrop-filter: blur(20px);
                     border: 1px solid var(--glass-border);
-                    padding: var(--space-xl);
+                    padding: var(--space-lg);
                     border-radius: var(--radius-xl);
                     text-align: center;
                     box-shadow: var(--shadow-lg);
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 90%;
+                    max-width: 400px;
+                    z-index: 100;
                 }
 
                 .result-content h2 {
-                    font-size: var(--font-xl);
-                    margin-bottom: var(--space-sm);
+                    font-size: 1.5rem;
+                    margin-bottom: var(--space-xs);
                 }
 
                 .result-content p {
-                    font-size: var(--font-lg);
+                    font-size: 1rem;
                     margin-bottom: var(--space-md);
                 }
 
@@ -548,19 +789,76 @@ const Game = ({ game, topo, triviaIndex }) => {
                     justify-content: center;
                     gap: var(--space-sm);
                     margin-top: var(--space-lg);
-                    flex-wrap: wrap;
                 }
 
                 @media (max-width: 640px) {
-                    .input-area {
+                    .game-container { gap: var(--space-sm); }
+                    .map-wrapper { height: clamp(200px, 35vh, 400px); }
+                    .guesses-list { max-height: 80px; }
+
+                    .result-modal {
+                        position: fixed;
+                        top: 10px;
+                        left: 10px;
+                        right: 10px;
+                        bottom: 10px;
+                        width: auto;
+                        max-width: none;
+                        transform: none;
+                        padding: 1rem;
+                        border-radius: 16px;
+                        overflow-y: auto;
+                        display: flex;
                         flex-direction: column;
                     }
-                    .game-input {
-                        width: 100%;
+
+                    .result-content {
+                        display: flex;
+                        flex-direction: column;
+                        flex: 1;
+                        min-height: 0;
                     }
-                    .btn {
-                        width: 100%;
+
+                    .result-content h2 {
+                        font-size: 1.25rem;
+                        margin-bottom: 0.5rem;
                     }
+
+                    .result-content p {
+                        font-size: 0.9rem;
+                        margin-bottom: 0.75rem;
+                    }
+
+                    .action-row {
+                        flex-direction: column;
+                        gap: 0.5rem;
+                        margin-top: 1rem;
+                    }
+
+                    .action-row .btn {
+                        width: 100%;
+                        padding: 0.65rem 1rem;
+                        font-size: 0.85rem;
+                    }
+                }
+
+                /* Victory Confetti */
+                .confetti-container {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    pointer-events: none;
+                    z-index: 99;
+                    overflow: hidden;
+                }
+
+                .confetti-piece {
+                    position: absolute;
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 2px;
                 }
             `}</style>
         </div>

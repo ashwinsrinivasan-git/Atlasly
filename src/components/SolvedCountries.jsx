@@ -39,6 +39,33 @@ const SolvedCountries = ({ profile, topo, onToggleVisited, onBack }) => {
                 />
             </div>
 
+            {/* Floating Mobile Badge */}
+            <motion.div
+                className="mobile-floating-badge"
+                initial={{ opacity: 0, y: 30, scale: 0.8 }}
+                animate={{
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    boxShadow: [
+                        '0 4px 20px rgba(16, 185, 129, 0.4)',
+                        '0 4px 30px rgba(16, 185, 129, 0.6)',
+                        '0 4px 20px rgba(16, 185, 129, 0.4)'
+                    ]
+                }}
+                transition={{
+                    delay: 0.5,
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 15,
+                    boxShadow: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                }}
+                whileTap={{ scale: 0.95 }}
+            >
+                <Globe size={16} />
+                <span>{profile.guessed.length} solved</span>
+            </motion.div>
+
             {/* Sidebar with Solved Countries List */}
             <motion.div
                 className="countries-sidebar"
@@ -107,10 +134,10 @@ const SolvedCountries = ({ profile, topo, onToggleVisited, onBack }) => {
                     left: 0;
                     right: 0;
                     z-index: 10;
-                    background: rgba(15, 23, 42, 0.85);
-                    backdrop-filter: blur(20px);
+                    background: rgba(15, 23, 42, 0.7);
+                    backdrop-filter: blur(10px);
                     border-bottom: 1px solid rgba(16, 185, 129, 0.2);
-                    padding: 0.75rem 1.5rem;
+                    padding: 0.5rem 1rem;
                 }
 
                 .header-content {
@@ -128,7 +155,7 @@ const SolvedCountries = ({ profile, topo, onToggleVisited, onBack }) => {
 
                 .title-section h1 {
                     margin: 0;
-                    font-size: 1.125rem;
+                    font-size: 1rem;
                     font-weight: 700;
                     color: white;
                 }
@@ -139,9 +166,9 @@ const SolvedCountries = ({ profile, topo, onToggleVisited, onBack }) => {
                     gap: 0.375rem;
                     background: rgba(16, 185, 129, 0.2);
                     color: #34d399;
-                    padding: 0.375rem 0.75rem;
+                    padding: 0.25rem 0.6rem;
                     border-radius: 1rem;
-                    font-size: 0.875rem;
+                    font-size: 0.75rem;
                     font-weight: 600;
                     border: 1px solid rgba(16, 185, 129, 0.3);
                 }
@@ -323,6 +350,30 @@ const SolvedCountries = ({ profile, topo, onToggleVisited, onBack }) => {
                         right: 0;
                         width: 100%;
                     }
+
+                    .mobile-floating-badge {
+                        display: flex;
+                    }
+                }
+
+                .mobile-floating-badge {
+                    display: none;
+                    position: fixed;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    align-items: center;
+                    gap: 0.5rem;
+                    background: rgba(16, 185, 129, 0.95);
+                    color: white;
+                    padding: 0.6rem 1.25rem;
+                    border-radius: 2rem;
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    z-index: 100;
                 }
             `}</style>
         </div>

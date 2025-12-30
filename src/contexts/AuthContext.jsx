@@ -1,16 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
     signInWithPopup,
     signInWithRedirect,
     getRedirectResult,
     signOut,
-    onAuthStateChanged,
-    updateProfile
+    onAuthStateChanged
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider, githubProvider } from '../config/firebase';
+import { auth, db, googleProvider } from '../config/firebase';
 
 const AuthContext = createContext({});
 
@@ -138,19 +135,6 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Sign up with email and password
-    const signup = async (email, password, displayName) => {
-        const result = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(result.user, { displayName });
-        await createUserProfile(result.user, { displayName });
-        return result;
-    };
-
-    // Sign in with email and password
-    const login = async (email, password) => {
-        return await signInWithEmailAndPassword(auth, email, password);
-    };
-
     // Sign in with Google (using popup with enhanced error handling)
     const loginWithGoogle = async () => {
         try {
@@ -166,18 +150,6 @@ export const AuthProvider = ({ children }) => {
             if (error.code === 'auth/popup-blocked') {
                 alert('Please allow popups for this site and try again.');
             }
-            throw error;
-        }
-    };
-
-    // Sign in with GitHub (using popup)
-    const loginWithGithub = async () => {
-        try {
-            const result = await signInWithPopup(auth, githubProvider);
-            await createUserProfile(result.user);
-            return result;
-        } catch (error) {
-            console.error('[AuthContext] GitHub sign-in error:', error);
             throw error;
         }
     };
@@ -241,10 +213,7 @@ export const AuthProvider = ({ children }) => {
         userProfile,
         isAdmin,
         loading,
-        signup,
-        login,
         loginWithGoogle,
-        loginWithGithub,
         logout,
         updateUserProfile
     };

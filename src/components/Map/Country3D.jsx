@@ -83,13 +83,13 @@ const CountryMesh = ({ feature, texture }) => {
             <Center>
                 <mesh ref={meshRef} castShadow receiveShadow>
                     <extrudeGeometry args={[shapes, extrudeSettings]} />
-                    {/* Face Material: Texture with some emission to prevent being too dark */}
+                    {/* Photorealistic earth texture with bright emissive to prevent dark appearance */}
                     <meshStandardMaterial
                         map={texture}
-                        roughness={0.4}
-                        metalness={0.2}
-                        emissive="#111111"
-                        emissiveIntensity={0.3}
+                        roughness={0.35}
+                        metalness={0.15}
+                        emissive="#4488cc"
+                        emissiveIntensity={0.4}
                         side={THREE.DoubleSide}
                     />
                 </mesh>
@@ -118,11 +118,13 @@ const Country3D = ({ topo, targetName }) => {
             <Canvas shadows dpr={[1, 2]}>
                 <PerspectiveCamera makeDefault position={[0, 0, 200]} fov={45} />
 
-                {/* High-end Lighting Setup */}
-                <ambientLight intensity={1.5} />
-                <hemisphereLight skyColor="#ffffff" groundColor="#000000" intensity={1.5} />
-                <directionalLight position={[100, 100, 100]} intensity={3.0} castShadow />
-                <pointLight position={[-100, -50, 50]} intensity={2.0} color="#60a5fa" />
+                {/* High-end Lighting Setup - Extra bright */}
+                <ambientLight intensity={3.0} />
+                <hemisphereLight skyColor="#ffffff" groundColor="#334155" intensity={2.5} />
+                <directionalLight position={[100, 100, 100]} intensity={4.0} castShadow />
+                <directionalLight position={[-100, 50, 50]} intensity={2.0} />
+                <pointLight position={[-100, -50, 50]} intensity={3.0} color="#60a5fa" />
+                <pointLight position={[100, 50, 100]} intensity={2.0} color="#f59e0b" />
 
                 <Environment preset="warehouse" />
 
